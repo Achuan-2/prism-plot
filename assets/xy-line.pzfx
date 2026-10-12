@@ -10,7 +10,7 @@
 </TableSequence>
 <Table ID="Table3" XFormat="numbers" YFormat="replicates" Replicates="1" TableType="XY" EVFormat="AsteriskAfterNumber">
 <Title>One subject per data set</Title>
-<XColumn Width="81" Subcolumns="1" Decimals="1">
+<XColumn Width="81" Subcolumns="1" Decimals="3">
 <Title/>
 <Subcolumn>
 <d>0</d>
@@ -27,7 +27,7 @@
 <d>11</d>
 </Subcolumn>
 </XColumn>
-<XAdvancedColumn Version="1" Width="81" Decimals="1" Subcolumns="1">
+<XAdvancedColumn Version="1" Width="81" Decimals="3" Subcolumns="1">
 <Title/>
 <Subcolumn>
 <d>0</d>
@@ -44,7 +44,7 @@
 <d>11</d>
 </Subcolumn>
 </XAdvancedColumn>
-<YColumn Width="81" Decimals="1" Subcolumns="1">
+<YColumn Width="81" Decimals="3" Subcolumns="1">
 <Title/>
 <Subcolumn>
 <d>9.404157</d>
@@ -61,7 +61,7 @@
 <d>4.54445</d>
 </Subcolumn>
 </YColumn>
-<YColumn Width="81" Decimals="1" Subcolumns="1">
+<YColumn Width="81" Decimals="3" Subcolumns="1">
 <Title/>
 <Subcolumn>
 <d>10.07814</d>
@@ -78,7 +78,7 @@
 <d>4.91581</d>
 </Subcolumn>
 </YColumn>
-<YColumn Width="81" Decimals="1" Subcolumns="1">
+<YColumn Width="81" Decimals="3" Subcolumns="1">
 <Title/>
 <Subcolumn>
 <d>10.68659</d>
@@ -95,7 +95,7 @@
 <d>5.411729</d>
 </Subcolumn>
 </YColumn>
-<YColumn Width="81" Decimals="1" Subcolumns="1">
+<YColumn Width="81" Decimals="3" Subcolumns="1">
 <Title/>
 <Subcolumn>
 <d>11.41528</d>
@@ -112,7 +112,7 @@
 <d>7.013601</d>
 </Subcolumn>
 </YColumn>
-<YColumn Width="81" Decimals="1" Subcolumns="1">
+<YColumn Width="81" Decimals="3" Subcolumns="1">
 <Title/>
 <Subcolumn>
 <d>8.66637</d>
@@ -129,7 +129,7 @@
 <d>3.676791</d>
 </Subcolumn>
 </YColumn>
-<YColumn Width="81" Decimals="1" Subcolumns="1">
+<YColumn Width="81" Decimals="3" Subcolumns="1">
 <Title/>
 <Subcolumn>
 <d>8.596437</d>
@@ -146,7 +146,7 @@
 <d>3.150516</d>
 </Subcolumn>
 </YColumn>
-<YColumn Width="81" Decimals="1" Subcolumns="1">
+<YColumn Width="81" Decimals="3" Subcolumns="1">
 <Title/>
 <Subcolumn>
 <d>8.146038</d>
@@ -163,7 +163,7 @@
 <d>3.060526</d>
 </Subcolumn>
 </YColumn>
-<YColumn Width="81" Decimals="1" Subcolumns="1">
+<YColumn Width="81" Decimals="3" Subcolumns="1">
 <Title/>
 <Subcolumn>
 <d>8.505774</d>

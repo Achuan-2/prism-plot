@@ -3,7 +3,7 @@
   "profiles": [
     {
       "template": "scatter-sem.pzfx",
-      "sha256": "5883fc7e50705779859834ffcdb91acf62d975fb0433f76efcb9ada157834152",
+      "sha256": "ca140065903f2bd20e2aa1b41e66712cef05a763569ddbe1acb3eedcfcb8be4d",
       "table_index": 1,
       "graph_index": 1,
       "prism_version": "10.3.1.509",
@@ -17,7 +17,7 @@
     },
     {
       "template": "bar-sem.pzfx",
-      "sha256": "cb23024ec3f9a5dfca89af3f4bc52901d2bcc22c2c38a60ea07b0e372ecf4b08",
+      "sha256": "3380a208fbb9ea5ef70e429469b511f91477c0b6c3111851d621dac6fbd3e750",
       "table_index": 1,
       "graph_index": 1,
       "prism_version": "10.3.1.509",
@@ -31,7 +31,7 @@
     },
     {
       "template": "box-minmax.pzfx",
-      "sha256": "720318d2ccf46eaba7a0cf0be3211d41e02d1a6641086c3fc60aaa85b7d4f485",
+      "sha256": "58d6a2d2c6b63d65981046d33567dab15214020db6baf3e820e58996fa6bfb09",
       "table_index": 1,
       "graph_index": 1,
       "prism_version": "10.3.1.509",
@@ -45,7 +45,7 @@
     },
     {
       "template": "paired-lines.pzfx",
-      "sha256": "ece5fa20e980afef105edc54504e2955da106c803f23d8b801527f12e25d6019",
+      "sha256": "9290b69fe30fe86c485baf358420f33acdd5baf3066c52487fafee075b9c2bab",
       "table_index": 1,
       "graph_index": 1,
       "prism_version": "10.3.1.509",
@@ -60,7 +60,7 @@
     },
     {
       "template": "xy-line.pzfx",
-      "sha256": "25c7f326abbc063bc6ff395d496592bcfd47dfc5fa3b31ecbf7c35d36df7f13e",
+      "sha256": "f0ed4267279a764e71ead5e76bf622e1fa69c5d331595e1a36c3a7584959ff95",
       "table_index": 1,
       "graph_index": 1,
       "prism_version": "10.3.1.509",

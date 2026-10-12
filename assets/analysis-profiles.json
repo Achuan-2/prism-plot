@@ -3,7 +3,7 @@
   "profiles": [
     {
       "template": "welch-mean-sem.pzfx",
-      "sha256": "0c043ffc446173685fc6e3b6c319a62acedd03b42b63e6f69fa840c66913abf9",
+      "sha256": "f639b6187debf76efa0367f212eda5178f272ca9f7552706f9ea5be415d157a1",
       "table_index": 1,
       "graph_index": 1,
       "prism_version": "10.3.1.509",
@@ -66,7 +66,7 @@
     },
     {
       "template": "welch-mean-sd.pzfx",
-      "sha256": "cd2f85fc8741bcb04640cacabd6cc3b99df0424e2752daaae544703c9ab525a4",
+      "sha256": "61013420954346d6e897767e1a916461a8e1bf9d0007fde0f3fcfcd1952bd47d",
       "table_index": 1,
       "graph_index": 1,
       "prism_version": "10.3.1.509",
@@ -129,7 +129,7 @@
     },
     {
       "template": "student-t-sem.pzfx",
-      "sha256": "a722fee36e082328c81970f25a118aa1d120c61a96045a4361240263600bd27a",
+      "sha256": "62054d55703d15a0857c15692b133401c71fddf6495c8fd4be4ee4bbde85aa0d",
       "table_index": 1,
       "graph_index": 1,
       "prism_version": "10.3.1.509",
@@ -192,7 +192,7 @@
     },
     {
       "template": "paired-t-sem.pzfx",
-      "sha256": "cba7a242654255089222bd5b50f95f5f9cb980e4b60225e29d47fa86e02fd02f",
+      "sha256": "0ee4aa5866f6682d57170f919c3335ea3b5a10ab4171247fbf4267c7bb7b7ed6",
       "table_index": 1,
       "graph_index": 1,
       "prism_version": "10.3.1.509",
@@ -255,7 +255,7 @@
     },
     {
       "template": "mann-whitney-sem.pzfx",
-      "sha256": "a5f9c39ede101fcdd026fecb43e526a20de39e87b196a12b4b38a4add62ecd2b",
+      "sha256": "a4f6d89fac31ae4eeae2406e9a49ef87bce432a6d2e3b2b2ad4fd2edc7f31fc3",
       "table_index": 1,
       "graph_index": 1,
       "prism_version": "10.3.1.509",
@@ -318,7 +318,7 @@
     },
     {
       "template": "wilcoxon-sem.pzfx",
-      "sha256": "fc1b207723300c03aa4d168697148529422d62ae7aafbc671570384a66093740",
+      "sha256": "c5f3f6799e8ba0ceca5f03312e9610f6995061b36d15e28ef3fe8183d91da581",
       "table_index": 1,
       "graph_index": 1,
       "prism_version": "10.3.1.509",
@@ -381,7 +381,7 @@
     },
     {
       "template": "anova-tukey-sem.pzfx",
-      "sha256": "d327fcbf08afebeea2b70b8d37b9b2e346a25d72a36c41b47ffa3d3881837d3a",
+      "sha256": "7f1ea0e330b301fb80fa9299d1b99f810fa1524da02bf6a3709c779841487c4c",
       "table_index": 1,
       "graph_index": 1,
       "prism_version": "10.3.1.509",

@@ -27,6 +27,8 @@
 
 当前库使用 `.pzfx` 作为可替换数据的运行模板。只编辑 XML 的 Table、YColumn/Subcolumn 和合法标题，保留 Template 原生配置。PZFX 的图形与分析配置不是普通 XML，不能用 XML 标签自行生成分析或改 SEM/SD。
 
+全部库模板及旧版兼容 `.prism` 模板的数据表数值列统一显示 3 位小数；PZFX 的数值列 `Decimals` 设置为 `3`，XY 模板同时设置 XColumn、XAdvancedColumn 和 YColumn。仅改变显示精度，原始数值、原生分析参数、p 值格式及图形坐标格式保持原样。更新后由 Prism 打开、重算并保存核对副本，确认显示设置被保留，再更新目录中的 SHA256。
+
 Prism 10+ 的 `.prism` 是容器格式：数据为 CSV，分析参数和结果为 JSON。因此“AI 编辑数据”适合 PZFX，“AI 检查或修改原生统计参数”往往更适合 PRISM。图形样式仍由本机实际结构及 Prism 能力决定，不直接篡改不透明 data.bin。
 
 本次已在项目副本中更改 `experimentalDesign` 为 `UNPAIRED_T_TEST`、`PAIRED_T_TEST`、`MANN_WHITNEY_TEST`、`WILCOXON_TEST`，随后让 Prism `RecalcAll`、保存并核对实际结果，验证了本机版本中的这些路径。此能力不属于 `.pzc` 分析创建命令，也不代表任意 JSON 参数或其他版本都兼容。维护新组合时，保留其他参数，先验证 Prism 重算后的方法、样本数、结果和标注，再登记模板；不要修改缓存结果来代替重算。

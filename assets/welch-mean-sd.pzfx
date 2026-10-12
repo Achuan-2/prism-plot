@@ -13,7 +13,7 @@
 <RowTitlesColumn Width="1">
 <Subcolumn/>
 </RowTitlesColumn>
-<YColumn Width="125" Decimals="0" Subcolumns="1">
+<YColumn Width="125" Decimals="3" Subcolumns="1">
 <Title>Control</Title>
 <Subcolumn>
 <d>12.3</d>
@@ -24,7 +24,7 @@
 <d>12.5</d>
 </Subcolumn>
 </YColumn>
-<YColumn Width="125" Decimals="0" Subcolumns="1">
+<YColumn Width="125" Decimals="3" Subcolumns="1">
 <Title>Treatment</Title>
 <Subcolumn>
 <d>15.6</d>

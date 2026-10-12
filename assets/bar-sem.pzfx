@@ -13,7 +13,7 @@
 <RowTitlesColumn Width="1">
 <Subcolumn/>
 </RowTitlesColumn>
-<YColumn Width="125" Decimals="0" Subcolumns="1">
+<YColumn Width="125" Decimals="3" Subcolumns="1">
 <Title>Control</Title>
 <Subcolumn>
 <d>54</d>
@@ -27,7 +27,7 @@
 <d>54</d>
 </Subcolumn>
 </YColumn>
-<YColumn Width="125" Decimals="0" Subcolumns="1">
+<YColumn Width="125" Decimals="3" Subcolumns="1">
 <Title>Treated</Title>
 <Subcolumn>
 <d>87</d>
@@ -39,7 +39,7 @@
 <d>85</d>
 </Subcolumn>
 </YColumn>
-<YColumn Width="125" Decimals="0" Subcolumns="1">
+<YColumn Width="125" Decimals="3" Subcolumns="1">
 <Title>Treated
 +Antagonist</Title>
 <Subcolumn>
