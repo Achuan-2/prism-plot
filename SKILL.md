@@ -36,6 +36,8 @@ Mean ± SEM 的均值和误差条由 Prism 根据原始观测值计算，使用�
 
 ## 模板与能力边界
 
+本 skill 自带 [assets/welch-mean-sem.prism](assets/welch-mean-sem.prism)：适用于两组独立样本、双侧 Welch t 检验，图形为全部原始观测点加 Mean ± SEM，带关联 Prism 分析的显著性括号。已在 Prism 10.3.1 中逐组核对 Mean with SEM 并保存。该模板使用 `--table-index 1 --graph-index 3 --results-index 3`；用户已明确采用该检验且未提供其他匹配模板时优先使用它。模板中的其他图和结果表是历史配置，G3/R3 才是本模板的交付目标。它不适用于配对检验、三组以上比较或用户指定 SD 的任务；坐标范围继承模板，替换数据后应按本次数据调整并预览。
+
 Prism 脚本可导入数据、修改标题及坐标范围、导出图，但不能任意创建图形或修改全部样式。`.pzfx` 包含可编辑的 XML 数据区和不可直接生成的图形配置。处理器修改 XML 数据区，保留模板配置，再让 Prism 重算和渲染。
 
 用户提供的匹配 `.prism`/`.pzfx`/`.pzf`/`.pzt` 模板优先。非 `.pzfx` 模板先由 Prism 转存 XML 项目以填写数据，保留原生配置；已在本机 Prism 10.3.1 实测 `.prism` 输入和输出。未提供时，处理器尝试本机 `Portfolio/Graphs to explore` 的 `column-scatter`、`box-whisker`、`scatter-bars`、`xy-line` 四种现成模板；它们是否适合当前数据必须由实际模板检查和导出预览确认，不能把官方演示图当作通用出版模板。这些文件来自用户已有 Prism 安装，不随 skill 分发。
@@ -50,6 +52,7 @@ Prism 脚本可导入数据、修改标题及坐标范围、导出图，但不�
 
 ```powershell
 uv run python "<skill>/scripts/prism_plot.py" doctor
+uv run --with openpyxl python "<skill>/scripts/prism_plot.py" plot --input "D:\two-groups.xlsx" --layout column --template "<skill>/assets/welch-mean-sem.prism" --table-index 1 --graph-index 3 --results-index 3 --output "D:\figures"
 uv run python "<skill>/scripts/prism_plot.py" plot --input "D:\data.csv" --layout column --preset column-scatter --title "实验结果" --y-title "响应值" --output "D:\figures"
 uv run --with openpyxl python "<skill>/scripts/prism_plot.py" plot --input "D:\data.xlsx" --sheet "Data" --layout column --template "D:\my-template.pzfx" --formats pdf png --output "D:\figures"
 uv run python "<skill>/scripts/prism_plot.py" plot --input "D:\timecourse.csv" --layout xy --preset xy-line --x-title "Time (s)" --y-title "Signal" --formats pdf png --output "D:\figures"
