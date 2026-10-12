@@ -5,9 +5,9 @@ description: 接收 CSV、TSV、Excel、JSON 或用户粘贴的数据，使用�
 
 # GraphPad Prism 绘图与导出
 
-使用真正的 Prism 生成图表。入口是本目录的 `scripts/prism_plot.py`，通过 Windows 命令行执行 `.pzc` 脚本。每次在用户的输出目录下创建独立运行文件夹，保留原始输入记录、数据整理说明、可编辑 `.pzfx` 项目、执行脚本、导出图和 `manifest.json`。
+使用真正的 Prism 生成图表。入口是本目录的 `scripts/prism_plot.py`，通过 Windows 命令行执行 `.pzc` 脚本。每次在用户的输出目录下创建独立运行文件夹，保留原始输入记录、数据整理说明、可编辑 `.prism` 项目、执行脚本、导出图和 `manifest.json`。默认使用 Prism 10+ 的 `.prism` 格式；兼容旧版时可选 `--project-format pzfx`。
 
-源项目是默认交付文件。脚本完成 Prism 保存并核对数据后，会在用户指定的输出文件夹顶层额外保留 `<数据文件名>-<运行时间及唯一编号>.pzfx`，便于直接双击打开；完整复制最终 `project.pzfx`，保留其中的数据、图形和已有分析配置，不覆盖往次项目。清单的 `deliverable_project` 给出这个入口，`deliverable_project_sha256` 记录副本校验值。`--prepare-only` 只交付待执行项目，不声称已保存最终图形。
+源项目是默认交付文件。脚本完成 Prism 保存并核对数据后，会在用户指定的输出文件夹顶层额外保留 `<数据文件名>-<运行时间及唯一编号>.prism`（或所选 `.pzfx`），便于直接双击打开；完整复制 Prism 保存的最终项目，保留其中的数据、图形和已有分析配置，不覆盖往次项目。清单的 `deliverable_project` 给出这个入口，`deliverable_project_sha256` 记录副本校验值。`.prism` 必须由 Prism 的 `Save` 实际生成并校验压缩包及原生内容，不能改扩展名代替转换；运行目录另留同一状态的 `project.pzfx` 做精确输入核对。`--prepare-only` 只交付待执行项目，不声称已保存最终图形。
 
 通过界面绘图或另外整理交付文件夹时，也把最终 Prism 源项目和导出图放在同一交付文件夹顶层，使用对应的易读名称；保留真实的 `.pzfx`、`.pzf` 或 `.prism` 格式，不把纯数据 XML 改名当作完整绘图项目。源项目必须保存本次请求的原始数据、图形、Prism 分析配置及结果和显著性标注，不能仅交付无分析或无标注的替代项目。
 
@@ -34,7 +34,7 @@ description: 接收 CSV、TSV、Excel、JSON 或用户粘贴的数据，使用�
 
 Prism 脚本可导入数据、修改标题及坐标范围、导出图，但不能任意创建图形或修改全部样式。`.pzfx` 包含可编辑的 XML 数据区和不可直接生成的图形配置。处理器修改 XML 数据区，保留模板配置，再让 Prism 重算和渲染。
 
-用户提供的匹配 `.pzfx`/`.pzf`/`.pzt` 模板优先。未提供时，处理器尝试本机 `Portfolio/Graphs to explore` 的 `column-scatter`、`box-whisker`、`scatter-bars`、`xy-line` 四种现成模板；它们是否适合当前数据必须由实际模板检查和导出预览确认，不能把官方演示图当作通用出版模板。这些文件来自用户已有 Prism 安装，不随 skill 分发。
+用户提供的匹配 `.prism`/`.pzfx`/`.pzf`/`.pzt` 模板优先。非 `.pzfx` 模板先由 Prism 转存 XML 项目以填写数据，保留原生配置；已在本机 Prism 10.3.1 实测 `.prism` 输入和输出。未提供时，处理器尝试本机 `Portfolio/Graphs to explore` 的 `column-scatter`、`box-whisker`、`scatter-bars`、`xy-line` 四种现成模板；它们是否适合当前数据必须由实际模板检查和导出预览确认，不能把官方演示图当作通用出版模板。这些文件来自用户已有 Prism 安装，不随 skill 分发。
 
 使用模板前检查实际表格类型、X 格式、子列数、数据集数量及图形。处理器只支持原始 Column 数据和单 Y 子列的 XY 数据；拒绝不匹配的分组表、均值/误差表或额外数据集，避免部分数据漏画。较少的数据集会清空剩余模板列，预览时检查是否有空的图例或组位。多数据表模板必须明确指定 `--table-index`，并核对 `--graph-index` 是否引用该表；其他表不会被改写。
 
@@ -50,11 +50,14 @@ uv run python "<skill>/scripts/prism_plot.py" plot --input "D:\data.csv" --layou
 uv run --with openpyxl python "<skill>/scripts/prism_plot.py" plot --input "D:\data.xlsx" --sheet "Data" --layout column --template "D:\my-template.pzfx" --formats pdf png --output "D:\figures"
 uv run python "<skill>/scripts/prism_plot.py" plot --input "D:\timecourse.csv" --layout xy --preset xy-line --x-title "Time (s)" --y-title "Signal" --formats pdf png --output "D:\figures"
 uv run python "<skill>/scripts/prism_plot.py" plot --input "D:\two-groups.csv" --layout column --template "D:\welch-template.pzfx" --graph-index 3 --results-index 3 --output "D:\figures"
+uv run python "<skill>/scripts/prism_plot.py" plot --input "D:\two-groups.csv" --layout column --template "D:\welch-template.prism" --graph-index 3 --results-index 3 --color-scheme Floral --title "Welch t test" --y-interval 20 --dpi 600 --project-format prism --output "D:\figures"
 ```
 
 `--prism-exe` 或 `PRISM_EXE` 可指定 Prism 可执行文件。`doctor` 只检查安装和路径，不代表导出成功。`.pzfx` 模板可先用 `inspect-template --template <path>` 检查。指定 `--prepare-only` 仅准备项目和脚本、不启动 Prism；仅支持 `.pzfx` 模板。
 
 默认导出 PDF 和 300 dpi PNG。按用户要求可用 `--formats pdf png tif eps emf svg`；SVG 依赖 Prism 版本，老版本报未知命令时保留错误证据并改用用户允许的格式。栅格 `--dpi` 允许 100、300、600、1200。可用 `--x-min/--x-max/--y-min/--y-max` 显式设定范围。未设定时继承模板的坐标设置，必须核对预览是否截断数据；不要声称继承的范围必然自动适配。
+
+需要美化时可用 `--color-scheme` 选择本机 Prism 已有方案，如 `Floral`、`Colorblind Safe`、`Waves`；用短标题、恰当的坐标范围及 `--x-interval/--y-interval` 主刻度间距改善可读性。600 dpi 用于提高栅格导出分辨率，PDF 保留矢量图。配色不改变检验与误差条含义，不把提高 DPI 称为字体或线宽美化。字体、字号、轴线宽、点大小、横纵比例及组名角度由模板控制，当前 `.pzc` 不能任意调整；不修改不透明图形二进制配置，也不后处理图片冒充原生样式。详细样式选择及脚本限制见 [references/appearance.md](references/appearance.md)。
 
 `--results-index N` 使用 `GoTo R N` 和 `ExportTable` 将选中的原生结果表导出为制表符文本 `results.txt`，路径记录为清单的 `results_export`；它不会创建或更改统计分析类型。示例中的 G3/R3 仅适用于对应模板，必须核对实际序号。读取结果表核对检验名称、p 值、样本数和显著性；仅存在非空文件不能证明选对了分析。
 

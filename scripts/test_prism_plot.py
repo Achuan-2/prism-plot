@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
+import zipfile
 
 SPEC = importlib.util.spec_from_file_location("prism_plot", Path(__file__).with_name("prism_plot.py"))
 prism = importlib.util.module_from_spec(SPEC)
@@ -98,6 +99,7 @@ class PrismDataTests(unittest.TestCase):
             "--input", str(source), "--layout", "column", "--template", str(self.template()),
             "--output", str(self.root / "output"), "--prepare-only", "--title", "响应 50%",
             "--results-index", "3",
+            "--color-scheme", "Floral", "--y-interval", "20",
         ], capture_output=True, text=True, encoding="utf-8")
         self.assertEqual(result.returncode, 0, result.stderr)
         manifest = json.loads(result.stdout)
@@ -111,6 +113,12 @@ class PrismDataTests(unittest.TestCase):
         self.assertEqual(commands[2:4], ["RecalcAll", "GoTo R 3"])
         self.assertTrue(commands[4].startswith('ExportTable "'))
         self.assertEqual(commands[5], "GoTo G 1")
+        self.assertEqual(commands[6], 'ApplyColorScheme "Floral"')
+        self.assertIn("SetAxisLimits Y Interval 20", commands)
+        self.assertEqual(manifest["project_format"], "prism")
+        self.assertEqual(Path(manifest["project"]).suffix, ".prism")
+        self.assertIn('Save "' + manifest["project"] + '"', commands)
+        self.assertIn('Save "' + manifest["verification_project"] + '"', commands)
         self.assertIn('"响应 50%%"', Path(manifest["script"]).read_text(encoding="utf-8-sig"))
         self.assertTrue(Path(manifest["script"]).read_bytes().startswith(b"CreateLog\r\n"))
 
@@ -138,6 +146,24 @@ class PrismDataTests(unittest.TestCase):
         path.write_bytes(b"not-a-png")
         with self.assertRaisesRegex(RuntimeError, "格式签名"):
             prism.validate_export(path, "png")
+
+    def test_modern_project_rejects_renamed_xml_and_missing_native_graph(self):
+        path = self.root / "project.prism"
+        path.write_bytes(b"<?xml version='1.0'?><GraphPadPrismFile/>")
+        with self.assertRaisesRegex(RuntimeError, "不是有效"):
+            prism.validate_prism_project(path)
+        document = {"sheets": {"data": ["data-uid"], "graphs": ["graph-uid"], "analyses": ["analysis-uid"]}}
+        with zipfile.ZipFile(path, "w") as archive:
+            archive.writestr("document.json", json.dumps(document))
+            archive.writestr("data/sheets/data-uid/sheet.json", "{}")
+            archive.writestr("graphs/graph-uid/sheet.json", "{}")
+            archive.writestr("analyses/analysis-uid/parameters.json", "{}")
+            archive.writestr("analyses/analysis-uid/results.json", '{"p": 0.01}')
+        with self.assertRaisesRegex(RuntimeError, "缺少完整"):
+            prism.validate_prism_project(path)
+        with zipfile.ZipFile(path, "a") as archive:
+            archive.writestr("graphs/graph-uid/data.bin", b"preserved-native-graph-payload")
+        prism.validate_prism_project(path)
 
     def test_xlsx_sheet_selection_and_uncached_formula(self):
         try:

@@ -30,6 +30,7 @@ SetAxisTitle Y "响应值"
 ExportPDF "D:\run\figure.pdf" RGB
 ExportPNG "D:\run\figure.png" 300
 Save "D:\run\project.pzfx"
+Save "D:\run\project.prism"
 Close
 OpenOutput "D:\run\finished.txt"
 WText "done"
@@ -37,6 +38,8 @@ CloseOutput
 ```
 
 需要结果表时，在选择图形前插入 `GoTo R <结果表序号>` 和 `ExportTable "D:\run\results.txt"`。`.txt` 为制表符文本，`.csv` 为逗号分隔文本。`RecalcAll` 重算项目已有分析，不能创建新的统计设置。处理器先更新完整模板的 XML 数据，再启动 Prism 执行这些命令；Python 不计算统计检验或绘制导出图。
+
+Prism 10.3.1 已实测 `Save` 可生成真正的 `.prism` 文件，`Open` 也可读取该格式。先保存 `.pzfx` 便于核对 XML 数据，再保存 `.prism` 作为默认交付源项目；旧版用 `--project-format pzfx`。`.prism` 是含数据、原生分析与图形的 ZIP 容器，不能仅重命名 XML。
 
 百分号用于 Prism 脚本变量，标题和路径中的字面 `%` 需写成 `%%`；引号及换行被拒绝，避免破坏脚本。部分旧版本可能不能读取中文 UTF-8 脚本；根据真实错误改用其支持的编码或手动运行，勿直接宣称兼容。导出 SVG 应核对已安装 Prism 的支持情况。
 

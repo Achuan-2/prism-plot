@@ -377,7 +377,7 @@ def plot(args):
         if not template.is_file():
             raise ValueError(f"本机没有预设模板 {template}，请指定 --template")
     if args.prepare_only and template.suffix.lower() != ".pzfx":
-        raise ValueError("二进制模板必须由 Prism 转换，--prepare-only 仅接受 .pzfx")
+        raise ValueError("非 .pzfx 模板需由 Prism 转换，--prepare-only 仅接受 .pzfx")
     output = Path(args.output).resolve() if args.output else source.parent / "prism-output"
     run = output / (datetime.now().strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:8])
     run.mkdir(parents=True, exist_ok=False)
@@ -422,6 +422,9 @@ def plot(args):
                 value = getattr(args, f"{axis}_{bound}")
                 if value is not None:
                     lines.append(f"SetAxisLimits {axis.upper()} {keyword} {value:g}")
+            interval = getattr(args, f"{axis}_interval")
+            if interval is not None:
+                lines.append(f"SetAxisLimits {axis.upper()} Interval {interval:g}")
         exports = []
         commands = {"pdf": "ExportPDF", "png": "ExportPNG", "tif": "ExportTIF", "eps": "ExportEPS", "emf": "ExportEMF", "svg": "ExportSVG"}
         for fmt in dict.fromkeys(args.formats):
@@ -499,6 +502,7 @@ def main():
     for axis in ("x", "y"):
         for bound in ("min", "max"):
             plotting.add_argument(f"--{axis}-{bound}", type=float)
+        plotting.add_argument(f"--{axis}-interval", type=float, help="主刻度间距，需大于零")
     args = parser.parse_args()
     try:
         if args.command == "doctor":
@@ -518,6 +522,9 @@ def main():
                 low, high = getattr(args, f"{axis}_min"), getattr(args, f"{axis}_max")
                 if any(value is not None and not math.isfinite(value) for value in (low, high)) or low is not None and high is not None and low >= high:
                     raise ValueError(f"{axis.upper()} 坐标范围必须有限且最小值小于最大值")
+                interval = getattr(args, f"{axis}_interval")
+                if interval is not None and (not math.isfinite(interval) or interval <= 0):
+                    raise ValueError(f"{axis.upper()} 主刻度间距必须是大于零的有限数值")
             plot(args)
         return 0
     except (ValueError, RuntimeError, OSError, ET.ParseError, json.JSONDecodeError) as error:
