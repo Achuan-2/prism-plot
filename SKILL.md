@@ -1,0 +1,69 @@
+---
+name: prism-plot
+description: 接收 CSV、TSV、Excel、JSON 或用户粘贴的数据，使用本机 GraphPad Prism 和绘图模板生成图表，导出 PDF、PNG 等格式并保留可编辑 Prism 项目。用于用户明确要求用 Prism 绘图、套用 Prism 模板或批量导出的任务。
+---
+
+# GraphPad Prism 绘图与导出
+
+使用真正的 Prism 生成图表。入口是本目录的 `scripts/prism_plot.py`，通过 Windows 命令行执行 `.pzc` 脚本。每次在用户的输出目录下创建独立运行文件夹，保留原始输入记录、数据整理说明、可编辑 `.pzfx` 项目、执行脚本、导出图和 `manifest.json`。
+
+源项目是默认交付文件。脚本完成 Prism 保存并核对数据后，会在用户指定的输出文件夹顶层额外保留 `<数据文件名>-<运行时间及唯一编号>.pzfx`，便于直接双击打开；完整复制最终 `project.pzfx`，保留其中的数据、图形和已有分析配置，不覆盖往次项目。清单的 `deliverable_project` 给出这个入口，`deliverable_project_sha256` 记录副本校验值。`--prepare-only` 只交付待执行项目，不声称已保存最终图形。
+
+通过界面绘图或另外整理交付文件夹时，也把最终 Prism 源项目和导出图放在同一交付文件夹顶层，使用对应的易读名称；保留真实的 `.pzfx`、`.pzf` 或 `.prism` 格式，不把纯数据 XML 改名当作完整绘图项目。源项目必须保存本次请求的原始数据、图形、Prism 分析配置及结果和显著性标注，不能仅交付无分析或无标注的替代项目。
+
+## Prism 原生分析和导出
+
+统计检验由 Prism 执行，p 值和显著性以 Prism 结果表为准。Python 等外部脚本可以生成模拟数据、整理输入或核对文件，不代替 Prism 计算交付结果。比较括号和星号在 Prism 图内使用关联分析的 Pairwise Comparisons 添加并保存，随数据重算；不把外部计算的星号作为静态文本贴上去。
+
+交付图片和 PDF 必须由 Prism 的导出命令或导出界面直接生成。标题、坐标范围、字体、误差条及版面均在 Prism 内调整；不通过外部裁切 PDF、重绘图表、叠加标注或渲染 PDF 来替代请求的原生导出。可读取导出文件做检查或完整复制到交付目录，但不修改内容。
+
+需要统计检验时，先核对配对关系、检验类型、单双侧、误差定义以及比较对象，使用包含对应原生分析和图形标注的匹配模板。优先全程脚本执行：替换模板数据后，Prism 执行 `RecalcAll`，重新计算已有分析并更新关联星号；通过 `--results-index` 导出指定原生结果表，随后导出图形和保存源项目。无需每次操作电脑界面。只有首次缺少匹配模板时，才需要在 Prism 中配置分析和标注并保存；用户明确要求不用电脑控制时，使用已有模板，缺少模板则说明这一具体限制，不自行操作界面。`.pzc` 不支持从零任意设置统计分析；当前处理器也没有仅凭 `--layout column` 自动创建 t 检验的能力。缺少原生分析配置或执行能力时，应明确报告未完成，不转用外部统计或图片加工交付。模板创建步骤及脚本验收见 [references/native-statistics.md](references/native-statistics.md)。
+
+## 从输入到成图
+
+先检查用户输入的实际数据结构和绘图要求。可直接接收 CSV、TSV、XLSX、JSON；用户粘贴的表格先写成 UTF-8 CSV 或 JSON。对于 XLSX，仅绘图时无需另外生成 Excel 文档；用 `uv run --with openpyxl` 运行处理器。不要更改源数据文件。
+
+按数据语义选择布局：
+
+- `column`：各列为各组，行是独立观测值。组间样本数不同可留空。
+- `xy`：第一列为数值 X，后续每列为一条 Y 序列。缺测 Y 留空，但 X 不能空。
+
+默认保留所有观测值和组名，不补零、不删除离群值、不把重复测量当作独立样本。图形未指定时，独立组原始值优先列散点图；时间或剂量曲线优先 XY 图。均值、SD、SEM、配对结构、显著性检验、拟合及汇总数据的含义需要用户信息或明确的表头支持；不从列名猜测检验，也不把 SD 当成 SEM。必要的歧义可询问，其他步骤继续完成。
+
+## 模板与能力边界
+
+Prism 脚本可导入数据、修改标题及坐标范围、导出图，但不能任意创建图形或修改全部样式。`.pzfx` 包含可编辑的 XML 数据区和不可直接生成的图形配置。处理器修改 XML 数据区，保留模板配置，再让 Prism 重算和渲染。
+
+用户提供的匹配 `.pzfx`/`.pzf`/`.pzt` 模板优先。未提供时，处理器尝试本机 `Portfolio/Graphs to explore` 的 `column-scatter`、`box-whisker`、`scatter-bars`、`xy-line` 四种现成模板；它们是否适合当前数据必须由实际模板检查和导出预览确认，不能把官方演示图当作通用出版模板。这些文件来自用户已有 Prism 安装，不随 skill 分发。
+
+使用模板前检查实际表格类型、X 格式、子列数、数据集数量及图形。处理器只支持原始 Column 数据和单 Y 子列的 XY 数据；拒绝不匹配的分组表、均值/误差表或额外数据集，避免部分数据漏画。较少的数据集会清空剩余模板列，预览时检查是否有空的图例或组位。多数据表模板必须明确指定 `--table-index`，并核对 `--graph-index` 是否引用该表；其他表不会被改写。
+
+如果现有模板不能表达要求，先在可用的电脑操作能力中按其文档创建一个真实的 Prism 模板，再走同一导出流程；没有相关能力时说明缺少匹配模板，并请求用户保存一份模板。不要编造图形二进制区、用别的软件画图后称为 Prism 导出，或宣称只写出数据 XML 就已生成图形。
+
+## 执行
+
+下面示例中的脚本路径应替换为当前 skill 的绝对路径；输出目录可按用户要求指定，默认放在输入旁边的 `prism-output`。
+
+```powershell
+uv run python "<skill>/scripts/prism_plot.py" doctor
+uv run python "<skill>/scripts/prism_plot.py" plot --input "D:\data.csv" --layout column --preset column-scatter --title "实验结果" --y-title "响应值" --output "D:\figures"
+uv run --with openpyxl python "<skill>/scripts/prism_plot.py" plot --input "D:\data.xlsx" --sheet "Data" --layout column --template "D:\my-template.pzfx" --formats pdf png --output "D:\figures"
+uv run python "<skill>/scripts/prism_plot.py" plot --input "D:\timecourse.csv" --layout xy --preset xy-line --x-title "Time (s)" --y-title "Signal" --formats pdf png --output "D:\figures"
+uv run python "<skill>/scripts/prism_plot.py" plot --input "D:\two-groups.csv" --layout column --template "D:\welch-template.pzfx" --graph-index 3 --results-index 3 --output "D:\figures"
+```
+
+`--prism-exe` 或 `PRISM_EXE` 可指定 Prism 可执行文件。`doctor` 只检查安装和路径，不代表导出成功。`.pzfx` 模板可先用 `inspect-template --template <path>` 检查。指定 `--prepare-only` 仅准备项目和脚本、不启动 Prism；仅支持 `.pzfx` 模板。
+
+默认导出 PDF 和 300 dpi PNG。按用户要求可用 `--formats pdf png tif eps emf svg`；SVG 依赖 Prism 版本，老版本报未知命令时保留错误证据并改用用户允许的格式。栅格 `--dpi` 允许 100、300、600、1200。可用 `--x-min/--x-max/--y-min/--y-max` 显式设定范围。未设定时继承模板的坐标设置，必须核对预览是否截断数据；不要声称继承的范围必然自动适配。
+
+`--results-index N` 使用 `GoTo R N` 和 `ExportTable` 将选中的原生结果表导出为制表符文本 `results.txt`，路径记录为清单的 `results_export`；它不会创建或更改统计分析类型。示例中的 G3/R3 仅适用于对应模板，必须核对实际序号。读取结果表核对检验名称、p 值、样本数和显著性；仅存在非空文件不能证明选对了分析。
+
+## 完成标准和失败处理
+
+检查 `manifest.json` 的状态、完成标记、每个请求导出文件的存在和格式签名，并读取输出项目核对数据值、组名和空值。打开 PNG 预览检查图形类型、图例、坐标范围、模板残留文字和全部数据集是否画出。预览有裁剪、错误标签或示例标注时修正匹配模板或坐标设置后再交付；不要仅根据退出码或文件存在认定图正确。
+
+执行超时或 Prism 退出而无完成标记时，说明实际错误、保留运行目录和 `.log`，不能报告成功。不自动关闭用户已有的 Prism 窗口或终止其进程。处理器不修改注册表、授权信息或 Prism 安装文件；自动重试前先查明失败原因。让用户手动在 Prism 中选择“运行脚本”可用于诊断，但不能把等待用户执行说成已完成。
+
+交付时优先给出输出文件夹顶层源项目的可点击路径，同时给出图、实际导出格式、使用的模板和必要的数据整理说明；注明项目内实际保存的图形、分析和标注，区分“已实测 Prism 导出”“仅准备完成”和“执行失败”。整理文件夹时保留源项目，不把它当作可丢弃的中间文件。
+
+官方命令和输入格式的补充信息见 [references/prism-automation.md](references/prism-automation.md)，仅在调整模板或命令时阅读。
