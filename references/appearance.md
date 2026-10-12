@@ -18,6 +18,6 @@
 
 Prism 10 起引入 `.prism` 原生格式。本机 10.3.1 已实测脚本 `Save "...project.prism"`，其产物包含 `document.json`、数据 CSV、分析参数及结果 JSON、原生图形配置；并已实测通过 `Open` 作为模板再次运行。脚本手册的 Save 页面仍只列旧格式，不应据此否定已实测的新格式能力。
 
-处理器默认 `--project-format prism`；需要兼容 Prism 9 或更早版本时选 `--project-format pzfx`。输入 `.prism` 先由 Prism 转存 `.pzfx`，填入数据后重新计算和保存为最终所选格式。保留完整项目，不重建或改写分析参数与图形二进制。
+处理器默认 `--project-format prism`；需要兼容 Prism 9 或更早版本时选 `--project-format pzfx`。输入 `.prism` 先由 Prism 转存 `.pzfx`，填入数据后重新计算和保存为最终所选格式。正常绘图保留模板分析与图形配置；维护分析 JSON 的已验证路径见 [template-library.md](template-library.md)，仍不修改图形二进制。
 
 官方依据：[Changing graphs](https://www.graphpad.com/guides/prism/latest/user-guide/changing_graphs.htm)、[Prism color schemes](https://www.graphpad.com/support/faq/prism-color-schemes/)、[The PRISM file format](https://www.graphpad.com/guides/prism/latest/user-guide/prism_file_format.htm)。

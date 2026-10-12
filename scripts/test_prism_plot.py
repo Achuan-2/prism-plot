@@ -8,6 +8,7 @@ import subprocess
 import re
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 import xml.etree.ElementTree as ET
@@ -23,6 +24,77 @@ class PrismDataTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
+
+    def analysis_arguments(self, **overrides):
+        values = dict(analysis="welch-t", error_bars=None, layout=None, template=None,
+                      preset=None, table_index=None, graph_index=None, results_index=None,
+                      title=None, x_title=None)
+        values.update(overrides)
+        return SimpleNamespace(**values)
+
+    def test_analysis_selection_defaults_sem_and_routes_sd(self):
+        headers, rows = ["A", "B"], [["1", "2"], ["3", "4"]]
+        for error_bars, filename in ((None, "welch-mean-sem.pzfx"), ("sd", "welch-mean-sd.pzfx")):
+            args = self.analysis_arguments(error_bars=error_bars)
+            profile = prism.select_analysis(args, headers, rows)
+            self.assertEqual(Path(args.template).name, filename)
+            self.assertEqual((args.table_index, args.graph_index, args.results_index), (1, 1, 1))
+            self.assertEqual(args.layout, "column")
+            self.assertEqual(args.title, "A vs B")
+            self.assertEqual(args.x_title, "")
+            self.assertEqual(profile["experimental_design"], "WELCH_T_TEST")
+
+    def test_analysis_rejects_unsupported_methods_and_conflicting_settings(self):
+        headers, rows = ["A", "B"], [["1", "2"], ["3", "4"]]
+        for settings in ({"analysis": "unsupported-test"}, {"error_bars": "ci95"}):
+            with self.subTest(settings=settings), self.assertRaisesRegex(ValueError, "尚无已验证"):
+                prism.select_analysis(self.analysis_arguments(**settings), headers, rows)
+        for settings in ({"template": "user.prism"}, {"graph_index": 1}, {"preset": "column-scatter"}):
+            with self.subTest(settings=settings), self.assertRaisesRegex(ValueError, "不能同时指定"):
+                prism.select_analysis(self.analysis_arguments(**settings), headers, rows)
+        with self.assertRaisesRegex(ValueError, "需同时指定"):
+            prism.select_analysis(self.analysis_arguments(analysis=None, error_bars="sd"), headers, rows)
+
+    def test_analysis_checks_groups_and_observation_counts(self):
+        with self.assertRaisesRegex(ValueError, "要求 2 组"):
+            prism.select_analysis(self.analysis_arguments(), ["A", "B", "C"], [["1", "2", "3"]])
+        with self.assertRaisesRegex(ValueError, "至少需要 2"):
+            prism.select_analysis(self.analysis_arguments(), ["A", "B"], [["1", "2"], [None, "3"]])
+        with self.assertRaisesRegex(ValueError, "要求 --layout column"):
+            prism.select_analysis(self.analysis_arguments(layout="xy"), ["A", "B"], [["1", "2"], ["3", "4"]])
+
+    def test_catalog_detects_template_drift(self):
+        assets = self.root / "assets"
+        assets.mkdir()
+        (assets / "template.prism").write_bytes(b"changed-template")
+        (assets / "analysis-profiles.json").write_text(json.dumps({"version": 1, "profiles": [
+            {"analysis": "welch-t", "error_bars": "sem", "template": "template.prism", "sha256": "wrong"}
+        ]}), encoding="utf-8")
+        with patch.object(prism, "ASSETS", assets), self.assertRaisesRegex(ValueError, "已改变"):
+            prism.analysis_profiles()
+
+    def test_paired_methods_reject_asymmetric_missing_observations(self):
+        for analysis in ("paired-t", "wilcoxon"):
+            with self.subTest(analysis=analysis), self.assertRaisesRegex(ValueError, "单边缺测"):
+                prism.select_analysis(self.analysis_arguments(analysis=analysis), ["Before", "After"],
+                                      [["1", "2"], ["3", "4"], [None, "5"]])
+            args = self.analysis_arguments(analysis=analysis)
+            profile = prism.select_analysis(args, ["Before", "After"], [["1", "2"], ["3", "4"]])
+            self.assertEqual(profile["pairing"], "paired")
+
+    def test_anova_and_graph_catalog_bind_correct_data_shapes(self):
+        args = self.analysis_arguments(analysis="anova-tukey")
+        profile = prism.select_analysis(args, ["A", "B", "C"], [["1", "2", "3"], ["2", "3", "4"]])
+        self.assertEqual(profile["post_test"], "TUKEY")
+        with self.assertRaisesRegex(ValueError, "要求 3 组"):
+            prism.select_analysis(self.analysis_arguments(analysis="anova-tukey"), ["A", "B"], [["1", "2"], ["3", "4"]])
+        graph = self.analysis_arguments(analysis=None, graph="paired-lines")
+        with self.assertRaisesRegex(ValueError, "完整配对"):
+            prism.select_graph(graph, ["A", "B"], [["1", "2"], ["3", None]])
+        graph = self.analysis_arguments(analysis=None, graph="xy-line")
+        profile = prism.select_graph(graph, ["Time", "Y"], [["0", "3"], ["1", "4"]])
+        self.assertEqual(graph.layout, "xy")
+        self.assertEqual(profile["error_bars"], None)
 
     def template(self, layout="column", count=3):
         root = ET.Element(prism.tag("GraphPadPrismFile"), PrismXMLVersion="5.00")
@@ -65,6 +137,21 @@ class PrismDataTests(unittest.TestCase):
         prism.verify_project(dest, headers, rows, "xy", 1)
         with self.assertRaisesRegex(ValueError, "X 列不能空"):
             prism.prepare(self.template("xy"), dest, headers, [[None, "1"]], "xy", None)
+
+    def test_xy_advanced_column_cannot_restore_old_demo_x(self):
+        template = self.template("xy", count=1)
+        tree, tables = prism.parse_template(template)
+        advanced = ET.SubElement(tables[0], prism.tag("XAdvancedColumn"), Version="1", Subcolumns="1")
+        ET.SubElement(advanced, prism.tag("Title"))
+        sub = ET.SubElement(advanced, prism.tag("Subcolumn"))
+        ET.SubElement(sub, prism.tag("d")).text = "999"
+        tree.write(template, encoding="utf-8")
+        dest = self.root / "result.pzfx"
+        prism.prepare(template, dest, ["Time", "Signal"], [["0", "1"], ["5", "2"]], "xy", 1)
+        _, tables = prism.parse_template(dest)
+        column = tables[0].find(prism.tag("XAdvancedColumn"))
+        self.assertEqual(column.findtext(prism.tag("Title")), "Time")
+        self.assertEqual([cell.text for cell in column.find(prism.tag("Subcolumn"))], ["0", "5"])
 
     def test_no_silent_dataset_loss_or_layout_coercion(self):
         template = self.template(count=1)

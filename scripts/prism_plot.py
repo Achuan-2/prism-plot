@@ -31,6 +31,152 @@ PRESETS = {
     "scatter-bars": ("column", "Scatter plot with bars.pzt"),
     "xy-line": ("xy", "Spaghetti plot.pzt"),
 }
+ASSETS = Path(__file__).resolve().parent.parent / "assets"
+
+
+def analysis_profiles():
+    """Read the finite catalog of verified native configurations."""
+    catalog = json.loads((ASSETS / "analysis-profiles.json").read_text(encoding="utf-8"))
+    if catalog.get("version") != 1 or not isinstance(catalog.get("profiles"), list):
+        raise ValueError("分析配置目录格式无效")
+    profiles = catalog["profiles"]
+    keys = set()
+    for profile in profiles:
+        key = (profile["analysis"], profile["error_bars"])
+        if key in keys:
+            raise ValueError(f"分析配置重复: {key}")
+        keys.add(key)
+        template = (ASSETS / profile["template"]).resolve()
+        if not template.is_relative_to(ASSETS.resolve()) or not template.is_file():
+            raise ValueError(f"分析配置缺少 assets 内的模板: {profile['template']}")
+        if hashlib.sha256(template.read_bytes()).hexdigest() != profile["sha256"]:
+            raise ValueError(f"原生配置模板已改变，需重新核对并登记校验值: {profile['template']}")
+        if any(not isinstance(profile[field], int) or profile[field] < 1
+               for field in ("table_index", "graph_index", "results_index", "groups", "minimum_observations")):
+            raise ValueError("分析配置的序号和样本要求必须为正整数")
+        validate_analysis_profile(template, profile)
+    return profiles
+
+
+def validate_analysis_profile(path, profile):
+    """Check the selected native analysis, not a catalog label alone."""
+    if path.suffix.lower() == ".pzfx":
+        # Analysis and graphs are opaque in PZFX. The catalog SHA pins a file
+        # exported and verified by Prism; check real parameters after Save PRISM.
+        tree, tables = parse_template(path)
+        if profile["table_index"] > len(tables) or not tree.getroot().findtext(tag("Template")):
+            raise ValueError("PZFX 配置缺少数据表或原生图形配置")
+        return
+    with zipfile.ZipFile(path) as archive:
+        document = json.loads(archive.read("document.json"))
+        sheets = document["sheets"]
+        for section, field in (("data", "table_index"), ("graphs", "graph_index"),
+                               ("analyses", "results_index")):
+            if profile[field] > len(sheets[section]):
+                raise ValueError(f"原生配置的 {field} 超出项目范围")
+        uid = sheets["analyses"][profile["results_index"] - 1]
+        parameters = json.loads(archive.read(f"analyses/{uid}/parameters.json"))["content"]
+        if parameters.get("experimentalDesign") != profile["experimental_design"]:
+            raise ValueError("原生项目的实际检验与所选分析配置不符")
+        if profile.get("post_test"):
+            tests = parameters["postTests"]["pairwiseTests"]
+            if (tests["pairwiseDesign"]["type"] != profile["comparison_design"] or
+                    tests["multipleComparisons"]["statistical"]["test"] != profile["post_test"]):
+                raise ValueError("原生项目的多重比较方法与所选配置不符")
+        elif parameters["options"]["pValueTailType"] != "P_VALUE_TWO_TAILED":
+            raise ValueError("所选双侧配置的原生分析实际不是双侧检验")
+
+
+def select_analysis(args, headers, rows):
+    """Bind a requested analysis to a native template, never infer study design."""
+    analysis = getattr(args, "analysis", None)
+    error_bars = getattr(args, "error_bars", None)
+    if analysis is None:
+        if error_bars is not None:
+            raise ValueError("--error-bars 需同时指定 --analysis；自定义模板的误差线由模板决定")
+        args.layout = args.layout or "column"
+        args.graph_index = args.graph_index or 1
+        return None
+    if args.template or args.preset or any(value is not None for value in
+                                          (args.table_index, args.graph_index, args.results_index)):
+        raise ValueError("--analysis 自动选择模板和序号，不能同时指定 template、preset 或表格序号")
+    error_bars = error_bars or "sem"
+    profiles = analysis_profiles()
+    matches = [profile for profile in profiles
+               if profile["analysis"] == analysis and profile["error_bars"] == error_bars]
+    if len(matches) != 1:
+        available = ", ".join(f"{p['analysis']} / {p['error_bars']}" for p in profiles)
+        raise ValueError(f"尚无已验证的 {analysis} / {error_bars} 原生配置。可用: {available}。"
+                         "其他方法需先在 Prism 中配置并登记；不会沿用 Welch 冒充所选检验。")
+    profile = matches[0]
+    if args.layout is not None and args.layout != profile["layout"]:
+        raise ValueError(f"所选分析要求 --layout {profile['layout']}")
+    if len(headers) != profile["groups"]:
+        raise ValueError(f"所选分析要求 {profile['groups']} 组数据，实际为 {len(headers)} 组")
+    for index, header in enumerate(headers):
+        count = sum(row[index] is not None for row in rows)
+        if count < profile["minimum_observations"]:
+            raise ValueError(f"{header} 至少需要 {profile['minimum_observations']} 个观测值，实际为 {count}")
+    if profile.get("pairing") == "paired" and any(
+            any(value is None for value in row) and not all(value is None for value in row) for row in rows):
+        raise ValueError("配对数据存在单边缺测；每行必须是同一对象的完整配对，不能自动错位或补值")
+    args.layout = profile["layout"]
+    args.template = str(ASSETS / profile["template"])
+    args.error_bars = error_bars
+    for field in ("table_index", "graph_index", "results_index"):
+        setattr(args, field, profile[field])
+    if args.title is None:
+        args.title = " vs ".join(headers)
+    if args.x_title is None:
+        args.x_title = ""
+    return dict(profile)
+
+
+def graph_profiles():
+    """Read verified native graph configurations independently of statistics."""
+    profiles = json.loads((ASSETS / "graph-profiles.json").read_text(encoding="utf-8"))["profiles"]
+    for profile in profiles:
+        path = (ASSETS / profile["template"]).resolve()
+        if not path.is_relative_to(ASSETS.resolve()) or not path.is_file():
+            raise ValueError("图形模板缺失或路径超出 assets")
+        if hashlib.sha256(path.read_bytes()).hexdigest() != profile["sha256"]:
+            raise ValueError(f"图形模板已改变，需重新核对: {path.name}")
+        parse_template(path)
+    return profiles
+
+
+def select_graph(args, headers, rows):
+    graph = getattr(args, "graph", None)
+    if not graph:
+        return None
+    if args.analysis or args.template or args.preset or any(value is not None for value in
+                                                         (args.table_index, args.graph_index, args.results_index)):
+        raise ValueError("--graph 自动选择绘图模板；不能与 analysis、template、preset 或手动序号混用")
+    matches = [profile for profile in graph_profiles() if profile["graph"] == graph]
+    if len(matches) != 1:
+        raise ValueError(f"尚无已验证的图形配置: {graph}")
+    profile = matches[0]
+    if args.error_bars is not None and args.error_bars != profile.get("error_bars"):
+        raise ValueError("所选图形没有此误差线配置；不能只改标签代替 Prism 设置")
+    offset = profile["layout"] == "xy"
+    groups = len(headers) - offset
+    if not profile["minimum_groups"] <= groups <= profile["maximum_groups"]:
+        raise ValueError(f"图形 {graph} 支持 {profile['minimum_groups']} 至 {profile['maximum_groups']} 个数据集")
+    if profile.get("pairing") == "paired" and any(any(v is None for v in row) for row in rows):
+        raise ValueError("配对连线图需要完整配对数据，每行对应同一对象")
+    for index in range(offset, len(headers)):
+        if sum(row[index] is not None for row in rows) < profile["minimum_observations"]:
+            raise ValueError(f"{headers[index]} 至少需要 {profile['minimum_observations']} 个观测值")
+    if args.layout not in (None, profile["layout"]):
+        raise ValueError(f"图形要求 --layout {profile['layout']}")
+    args.layout = profile["layout"]
+    args.template = str(ASSETS / profile["template"])
+    args.table_index, args.graph_index = profile["table_index"], profile["graph_index"]
+    if args.title is None:
+        args.title = ""
+    if args.x_title is None:
+        args.x_title = headers[0] if offset else ""
+    return dict(profile)
 
 
 def tag(name: str) -> str:
@@ -221,6 +367,11 @@ def prepare(template: Path, destination: Path, headers, rows, layout, table_inde
         if xcolumn is None:
             raise ValueError("XY 模板缺少 XColumn")
         replace_values(xcolumn, [row[0] for row in rows], headers[0])
+        # Prism 10 writes both legacy XColumn and XAdvancedColumn. On opening,
+        # the advanced column wins; leaving it unchanged restores demo X data.
+        advanced_x = table.find(tag("XAdvancedColumn"))
+        if advanced_x is not None:
+            replace_values(advanced_x, [row[0] for row in rows], headers[0])
     for i, column in enumerate(columns):
         values = [row[i + offset] for row in rows] if i < dataset_count else []
         replace_values(column, values, headers[i + offset] if i < dataset_count else "")
@@ -252,18 +403,25 @@ def completion_lines(marker: Path):
     return [f"OpenOutput {quoted(marker)}", 'WText "done"', "CloseOutput"]
 
 
-def execute(prism: Path, script: Path, marker: Path, timeout: float):
+def execute(prism: Path, script: Path, marker: Path, timeout: float, backend="cli"):
     if os.name != "nt":
         raise ValueError("此处理器的自动执行入口仅支持 Windows")
     startup = subprocess.STARTUPINFO()
     startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
     startup.wShowWindow = 0
     started = time.monotonic()
-    process = subprocess.Popen([str(prism), "@" + str(script)], startupinfo=startup)
+    if backend == "ole":
+        # GraphPad's synchronous Windows automation API. Never call Quit: that
+        # could close a Prism instance belonging to the user.
+        literal = str(script).replace("'", "''")
+        command = "$prismNative = New-Object -ComObject Prism.command; $prismNative.RunCommand('" + literal + "')"
+        process = subprocess.Popen(["powershell.exe", "-NoProfile", "-Command", command], startupinfo=startup)
+    else:
+        process = subprocess.Popen([str(prism), "@" + str(script)], startupinfo=startup)
     exit_observed = None
     while time.monotonic() - started < timeout:
         if marker.is_file() and marker.read_text(encoding="utf-8-sig", errors="replace").strip().strip('"') == "done":
-            return {"pid": process.pid, "seconds": round(time.monotonic() - started, 2)}
+            return {"pid": process.pid, "backend": backend, "seconds": round(time.monotonic() - started, 2)}
         exit_code = process.poll()
         if exit_code is not None:
             exit_observed = exit_observed or time.monotonic()
@@ -335,7 +493,7 @@ def validate_prism_project(path: Path):
                 archive.read(f"graphs/{uid}/sheet.json")
                 if not archive.read(f"graphs/{uid}/data.bin"):
                     raise ValueError("图形配置为空")
-            for uid in sheets["analyses"]:
+            for uid in sheets.get("analyses", []):
                 archive.read(f"analyses/{uid}/parameters.json")
                 if not json.loads(archive.read(f"analyses/{uid}/results.json")):
                     raise ValueError("原生分析结果为空")
@@ -350,6 +508,8 @@ def save_manifest(path, payload):
 def plot(args):
     source = Path(args.input).resolve()
     headers, rows = load_data(source, args.sheet)
+    graph_profile = select_graph(args, headers, rows)
+    profile = select_analysis(args, headers, rows) if graph_profile is None else None
     prism = None if args.prepare_only else find_prism(args.prism_exe)
     if args.template:
         template = Path(args.template).resolve()
@@ -379,6 +539,11 @@ def plot(args):
                 "project_format": args.project_format, "color_scheme": args.color_scheme,
                 "run_directory": str(run), "work_directory": str(work),
                 "warnings": ["继承模板的图形样式、统计和坐标设置；交付前必须检查预览"]}
+    if profile is not None:
+        manifest["analysis_profile"] = profile
+        manifest["template_sha256"] = hashlib.sha256(template.read_bytes()).hexdigest()
+    if graph_profile is not None:
+        manifest["graph_profile"] = graph_profile
     save_manifest(manifest_path, manifest)
     try:
         with (work / "normalized-data.csv").open("w", encoding="utf-8-sig", newline="") as stream:
@@ -390,7 +555,7 @@ def plot(args):
             marker = work / "template-finished.txt"
             script = work / "convert-template.pzc"
             write_script(script, ["CreateLog", f"Open {quoted(template)}", f"Save {quoted(converted)}", "Close", *completion_lines(marker)])
-            execute(prism, script, marker, args.timeout)
+            execute(prism, script, marker, args.timeout, **({"backend": args.backend} if args.backend != "cli" else {}))
             template = converted
         prepared = work / "prepared.pzfx"
         manifest["data"] = prepare(template, prepared, headers, rows, args.layout, args.table_index)
@@ -402,7 +567,14 @@ def plot(args):
         results_export = None
         if args.results_index is not None:
             results_export = run / "statistics.txt"
-            lines += [f"GoTo R {args.results_index}", f"ExportTable {quoted(results_export)}"]
+            # Two-sample projects can remember the Estimation Plot subpage.
+            # V1 selects the actual test results, independent of saved UI state.
+            view = " V1" if profile else ""
+            lines += [f"GoTo R {args.results_index}{view}", f"ExportTable {quoted(results_export)}"]
+            if profile and profile.get("post_test"):
+                comparisons = run / "comparisons.txt"
+                lines += ["GoTo V2", f"ExportTable {quoted(comparisons)}"]
+                manifest["comparisons_export"] = str(comparisons)
         lines.append(f"GoTo G {args.graph_index}")
         if args.color_scheme is not None:
             lines.append(f"ApplyColorScheme {quoted(args.color_scheme)}")
@@ -439,14 +611,20 @@ def plot(args):
             verify_project(prepared, headers, rows, args.layout, manifest["data"]["table_index"])
             manifest["status"] = "prepared_only"
         else:
-            manifest["execution"] = execute(prism, script, marker, args.timeout)
+            manifest["execution"] = execute(prism, script, marker, args.timeout, **({"backend": args.backend} if args.backend != "cli" else {}))
             for path, fmt in exports:
                 validate_export(path, fmt)
             if results_export is not None and (not results_export.is_file() or results_export.stat().st_size == 0):
                 raise RuntimeError(f"Prism 没有生成非空结果表: {results_export}")
+            if profile and "p value" not in read_text(results_export).lower():
+                raise RuntimeError("选中的原生结果子页不含 P value；检查统计结果的 V1 子页和日志")
+            if "comparisons_export" in manifest and (not comparisons.is_file() or comparisons.stat().st_size == 0):
+                raise RuntimeError("Prism 没有生成多重比较结果表")
             verify_project(verification_project, headers, rows, args.layout, manifest["data"]["table_index"])
             if args.project_format == "prism":
                 validate_prism_project(project)
+                if profile is not None:
+                    validate_analysis_profile(project, profile)
             manifest.update({"deliverable_project": str(project),
                              "deliverable_project_sha256": hashlib.sha256(project.read_bytes()).hexdigest()})
             manifest["status"] = "exported_preview_pending"
@@ -465,16 +643,22 @@ def main():
     doctor.add_argument("--prism-exe")
     inspect = sub.add_parser("inspect-template")
     inspect.add_argument("--template", required=True)
+    sub.add_parser("profiles", help="列出可直接选择的已验证原生分析和误差线配置")
     plotting = sub.add_parser("plot")
     plotting.add_argument("--input", required=True)
     plotting.add_argument("--sheet")
-    plotting.add_argument("--layout", required=True, choices=("column", "xy"))
+    plotting.add_argument("--layout", choices=("column", "xy"), help="默认 column；选择分析时自动设定")
+    plotting.add_argument("--analysis", help="选择已验证的原生分析配置，例如 welch-t；用 profiles 查看可用项")
+    plotting.add_argument("--graph", help="仅绘图，例如 scatter-sem、bar-sem、box-minmax、paired-lines、xy-line")
+    plotting.add_argument("--backend", choices=("cli", "ole"), default="cli", help="Windows 官方脚本执行接口；cli 转发失败时可选 ole")
+    plotting.add_argument("--error-bars", choices=("sem", "sd", "ci95"),
+                          help="与 --analysis 一起使用，默认 sem；必须有对应原生配置")
     plotting.add_argument("--template")
     plotting.add_argument("--preset", choices=tuple(PRESETS))
     plotting.add_argument("--prism-exe")
     plotting.add_argument("--output")
     plotting.add_argument("--table-index", type=int)
-    plotting.add_argument("--graph-index", type=int, default=1)
+    plotting.add_argument("--graph-index", type=int)
     plotting.add_argument("--results-index", type=int, help="导出指定 Prism 原生 Results 表为 statistics.txt；序号从 1 开始")
     plotting.add_argument("--project-format", choices=("prism", "pzfx"), default="prism",
                           help="交付源项目格式；prism 需要 Prism 10+，旧版可选 pzfx")
@@ -500,8 +684,10 @@ def main():
                               "note": "路径检查完成；尚未验证 Prism 执行和导出"}, ensure_ascii=False, indent=2))
         elif args.command == "inspect-template":
             print(json.dumps(inspect_template(Path(args.template)), ensure_ascii=False, indent=2))
+        elif args.command == "profiles":
+            print(json.dumps({"analyses": analysis_profiles(), "graphs": graph_profiles()}, ensure_ascii=False, indent=2))
         else:
-            if args.timeout <= 0 or args.graph_index < 1:
+            if args.timeout <= 0 or args.graph_index is not None and args.graph_index < 1:
                 raise ValueError("timeout 和 graph-index 必须大于零")
             if args.results_index is not None and args.results_index < 1:
                 raise ValueError("results-index 必须大于零")

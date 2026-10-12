@@ -36,22 +36,29 @@ Mean ± SEM 的均值和误差条由 Prism 根据原始观测值计算，使用�
 
 ## 模板与能力边界
 
-本 skill 自带 [assets/welch-mean-sem.prism](assets/welch-mean-sem.prism)：适用于两组独立样本、双侧 Welch t 检验，图形为全部原始观测点加 Mean ± SEM，带关联 Prism 分析的显著性括号。已在 Prism 10.3.1 中逐组核对 Mean with SEM 并保存。该模板使用 `--table-index 1 --graph-index 3 --results-index 3`；用户已明确采用该检验且未提供其他匹配模板时优先使用它。模板中的其他图和结果表是历史配置，G3/R3 才是本模板的交付目标。它不适用于配对检验、三组以上比较或用户指定 SD 的任务；坐标范围继承模板，替换数据后应按本次数据调整并预览。
+自带 12 个已由本机 Prism 10.3.1 保存的配置：Welch t（SEM/SD）、普通独立样本 t、配对 t、Mann–Whitney、Wilcoxon、三组单因素 ANOVA + Tukey，以及散点 SEM、柱状加点 SEM、箱线图、两组配对连线、XY 曲线。使用 `profiles` 查看实际目录；完整选择表、输入范围和维护方法见 [references/template-library.md](references/template-library.md)。新目录使用 `.pzfx` 模板，目标为 D1/G1、统计模板 R1，只保留目标图和必要分析。旧 `.prism` 模板保留用于历史路径兼容，其 G3/R3 序号仍需按旧配置使用。
 
-Prism 脚本可导入数据、修改标题及坐标范围、导出图，但不能任意创建图形或修改全部样式。`.pzfx` 包含可编辑的 XML 数据区和不可直接生成的图形配置。处理器修改 XML 数据区，保留模板配置，再让 Prism 重算和渲染。
+Prism 脚本可导入数据、修改标题及坐标范围、导出图，但不能任意创建图形或修改全部样式。`.pzfx` 的 XML 数据区适合 AI 替换原始值，图形和分析配置仍须保留。`.prism` 中分析参数和结果是 JSON，更适合检查和维护统计设置；本机已验证修改部分两样本 experimentalDesign 后由 Prism 重算的路径，但不承诺任意参数或版本可写。维护新模板时读取模板库说明，核对 Prism 保存后的真实方法与结果，不修改缓存结果代替重算。
 
 用户提供的匹配 `.prism`/`.pzfx`/`.pzf`/`.pzt` 模板优先。非 `.pzfx` 模板先由 Prism 转存 XML 项目以填写数据，保留原生配置；已在本机 Prism 10.3.1 实测 `.prism` 输入和输出。未提供时，处理器尝试本机 `Portfolio/Graphs to explore` 的 `column-scatter`、`box-whisker`、`scatter-bars`、`xy-line` 四种现成模板；它们是否适合当前数据必须由实际模板检查和导出预览确认，不能把官方演示图当作通用出版模板。这些文件来自用户已有 Prism 安装，不随 skill 分发。
 
 使用模板前检查实际表格类型、X 格式、子列数、数据集数量及图形；需要汇总和误差条时核对其原生设置，默认应为 Mean with SEM，用户指定其他方式时按指定值核对。处理器只支持原始 Column 数据和单 Y 子列的 XY 数据；拒绝不匹配的分组表、均值/误差表或额外数据集，避免部分数据漏画。较少的数据集会清空剩余模板列，预览时检查是否有空的图例或组位。多数据表模板必须明确指定 `--table-index`，并核对 `--graph-index` 是否引用该表；其他表不会被改写。
 
-如果现有模板不能表达要求，先在可用的电脑操作能力中按其文档创建一个真实的 Prism 模板，再走同一导出流程；没有相关能力时说明缺少匹配模板，并请求用户保存一份模板。不要编造图形二进制区、用别的软件画图后称为 Prism 导出，或宣称只写出数据 XML 就已生成图形。
+如果现有模板不能表达要求，先判断能否沿用已经验证的 `.prism` 参数修改路径，再让 Prism 重算、保存并验收新的完整模板；需要未知图形样式或尚未验证的分析时，在用户允许的电脑操作能力中创建真实模板。没有可用路径时说明缺少匹配模板，并请求用户保存一份模板。不要编造图形二进制区、用别的软件画图后称为 Prism 导出，或宣称只写出数据 XML 就已生成图形。
 
 ## 执行
+
+常用分析优先使用 `--analysis welch-t|student-t|paired-t|mann-whitney|wilcoxon|anova-tukey`，默认 Mean ± SEM；Welch 可通过 `--error-bars sd` 切换为 SD。只绘图用 `--graph scatter-sem|bar-sem|box-minmax|paired-lines|xy-line`，不自动检验。处理器选择布局、模板和真实序号并记录清单，检查样本要求、容量、配对单边缺测、SHA256，以及保存后 `.prism` 的实际方法。两种参数入口互斥，不与自定义模板、旧 preset 或手动序号混用。未登记的方法、样式或误差线组合报错，不回退。坐标范围仍须检查或显式设置。
+
+新增方法或图形时先保存完整原生模板并验收，再登记 [assets/analysis-profiles.json](assets/analysis-profiles.json) 或 [assets/graph-profiles.json](assets/graph-profiles.json)。目录已支持双侧两样本、完整配对和三组普通 ANOVA + Tukey 的验证；其他设计仍需扩展真实参数和数据检查，不能只改标签。ANOVA 同时导出总体检验 `statistics.txt` 和调整后比较 `comparisons.txt`。这是处理器选择配置，不是 `.pzc` 新增 Analyze 或 SetErrorBars 命令。
 
 下面示例中的脚本路径应替换为当前 skill 的绝对路径；输出目录可按用户要求指定，默认放在输入旁边的 `prism-output`。
 
 ```powershell
 uv run python "<skill>/scripts/prism_plot.py" doctor
+uv run python "<skill>/scripts/prism_plot.py" profiles
+uv run --with openpyxl python "<skill>/scripts/prism_plot.py" plot --input "D:\two-groups.xlsx" --analysis welch-t --output "D:\figures"
+uv run --with openpyxl python "<skill>/scripts/prism_plot.py" plot --input "D:\two-groups.xlsx" --analysis welch-t --error-bars sd --output "D:\figures"
 uv run --with openpyxl python "<skill>/scripts/prism_plot.py" plot --input "D:\two-groups.xlsx" --layout column --template "<skill>/assets/welch-mean-sem.prism" --table-index 1 --graph-index 3 --results-index 3 --output "D:\figures"
 uv run python "<skill>/scripts/prism_plot.py" plot --input "D:\data.csv" --layout column --preset column-scatter --title "实验结果" --y-title "响应值" --output "D:\figures"
 uv run --with openpyxl python "<skill>/scripts/prism_plot.py" plot --input "D:\data.xlsx" --sheet "Data" --layout column --template "D:\my-template.pzfx" --formats pdf png --output "D:\figures"
@@ -61,6 +68,8 @@ uv run python "<skill>/scripts/prism_plot.py" plot --input "D:\two-groups.csv" -
 ```
 
 `--prism-exe` 或 `PRISM_EXE` 可指定 Prism 可执行文件。`doctor` 只检查安装和路径，不代表导出成功。`.pzfx` 模板可先用 `inspect-template --template <path>` 检查。指定 `--prepare-only` 仅准备项目和脚本、不启动 Prism；仅支持 `.pzfx` 模板。
+
+Windows 默认通过可执行文件执行脚本，也支持 `--backend ole` 调用官方 `Prism.command.RunCommand`，无需电脑控制。CLI 转发失败时先看日志，确认原因后可显式用 OLE；OLE 使用系统注册版本，可能与 `--prism-exe` 不同。初始化失败、无完成标记或超时均保留诊断，不连续创建实例或关闭用户的 Prism 窗口。模板首次创建可以使用用户授权的界面配置，正常数据替换、重算和导出走原生脚本。
 
 默认导出 PDF 和 300 dpi PNG。按用户要求可用 `--formats pdf png tif eps emf svg`；SVG 依赖 Prism 版本，老版本报未知命令时保留错误证据并改用用户允许的格式。栅格 `--dpi` 允许 100、300、600、1200。可用 `--x-min/--x-max/--y-min/--y-max` 显式设定范围。未设定时继承模板的坐标设置，必须核对预览是否截断数据；不要声称继承的范围必然自动适配。
 

@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "template": "scatter-sem.pzfx",
+      "sha256": "5883fc7e50705779859834ffcdb91acf62d975fb0433f76efcb9ada157834152",
+      "table_index": 1,
+      "graph_index": 1,
+      "prism_version": "10.3.1.509",
+      "graph": "scatter-sem",
+      "layout": "column",
+      "summary": "Mean ± SEM + 原始点",
+      "error_bars": "sem",
+      "minimum_groups": 2,
+      "maximum_groups": 3,
+      "minimum_observations": 2
+    },
+    {
+      "template": "bar-sem.pzfx",
+      "sha256": "cb23024ec3f9a5dfca89af3f4bc52901d2bcc22c2c38a60ea07b0e372ecf4b08",
+      "table_index": 1,
+      "graph_index": 1,
+      "prism_version": "10.3.1.509",
+      "graph": "bar-sem",
+      "layout": "column",
+      "summary": "Mean ± SEM 柱状 + 原始点",
+      "error_bars": "sem",
+      "minimum_groups": 2,
+      "maximum_groups": 3,
+      "minimum_observations": 2
+    },
+    {
+      "template": "box-minmax.pzfx",
+      "sha256": "720318d2ccf46eaba7a0cf0be3211d41e02d1a6641086c3fc60aaa85b7d4f485",
+      "table_index": 1,
+      "graph_index": 1,
+      "prism_version": "10.3.1.509",
+      "graph": "box-minmax",
+      "layout": "column",
+      "summary": "中位数、四分位箱体、Min-to-Max 须线",
+      "error_bars": null,
+      "minimum_groups": 2,
+      "maximum_groups": 3,
+      "minimum_observations": 2
+    },
+    {
+      "template": "paired-lines.pzfx",
+      "sha256": "ece5fa20e980afef105edc54504e2955da106c803f23d8b801527f12e25d6019",
+      "table_index": 1,
+      "graph_index": 1,
+      "prism_version": "10.3.1.509",
+      "graph": "paired-lines",
+      "layout": "column",
+      "summary": "每行同一对象，原始点与连线，无误差条",
+      "error_bars": null,
+      "minimum_groups": 2,
+      "maximum_groups": 2,
+      "minimum_observations": 2,
+      "pairing": "paired"
+    },
+    {
+      "template": "xy-line.pzfx",
+      "sha256": "25c7f326abbc063bc6ff395d496592bcfd47dfc5fa3b31ecbf7c35d36df7f13e",
+      "table_index": 1,
+      "graph_index": 1,
+      "prism_version": "10.3.1.509",
+      "graph": "xy-line",
+      "layout": "xy",
+      "summary": "各 Y 列独立曲线，无重复值时无误差条",
+      "error_bars": null,
+      "minimum_groups": 1,
+      "maximum_groups": 8,
+      "minimum_observations": 1,
+      "legend": "column_titles"
+    }
+  ]
+}

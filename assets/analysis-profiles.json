@@ -1,0 +1,490 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "template": "welch-mean-sem.pzfx",
+      "sha256": "0c043ffc446173685fc6e3b6c319a62acedd03b42b63e6f69fa840c66913abf9",
+      "table_index": 1,
+      "graph_index": 1,
+      "prism_version": "10.3.1.509",
+      "analysis": "welch-t",
+      "error_bars": "sem",
+      "experimental_design": "WELCH_T_TEST",
+      "pairing": "independent",
+      "label": "独立样本双侧 Welch t，Mean ± SEM",
+      "layout": "column",
+      "groups": 2,
+      "minimum_observations": 2,
+      "results_index": 1,
+      "native_parameters": {
+        "@class": "AnalysisParameters",
+        "$id": "analyses/two_sample_tests/parameters.schema.json",
+        "version": "0.0.0",
+        "content": {
+          "experimentalDesign": "WELCH_T_TEST",
+          "calc": {
+            "modelComparisonAIC": false,
+            "ciOfDifferenceBetweenMedians": false,
+            "ciOfMedianOfDifferences": false,
+            "usePrattMethod": false
+          },
+          "residuals": {
+            "diagnostics": {
+              "normalityTests": false
+            },
+            "graphs": {
+              "residualsPlot": false,
+              "homoscedasticityPlot": false,
+              "qqPlot": false,
+              "heatMapPlot": false
+            }
+          },
+          "report": {
+            "descriptiveStatistics": false
+          },
+          "graph": {
+            "differences": false,
+            "correlation": false,
+            "ranks": false,
+            "confidenceInterval": true
+          },
+          "options": {
+            "swapDirection": true,
+            "pValueTailType": "P_VALUE_TWO_TAILED",
+            "significanceLevel": 0.05
+          },
+          "output": {
+            "significantDigitCount": 4,
+            "pValueStyle": {
+              "type": "P_VALUE_STYLE_GP",
+              "decimalDigitCount": 6
+            }
+          }
+        }
+      },
+      "sidedness": "two-tailed"
+    },
+    {
+      "template": "welch-mean-sd.pzfx",
+      "sha256": "cd2f85fc8741bcb04640cacabd6cc3b99df0424e2752daaae544703c9ab525a4",
+      "table_index": 1,
+      "graph_index": 1,
+      "prism_version": "10.3.1.509",
+      "analysis": "welch-t",
+      "error_bars": "sd",
+      "experimental_design": "WELCH_T_TEST",
+      "pairing": "independent",
+      "label": "独立样本双侧 Welch t，Mean ± SD",
+      "layout": "column",
+      "groups": 2,
+      "minimum_observations": 2,
+      "results_index": 1,
+      "native_parameters": {
+        "@class": "AnalysisParameters",
+        "$id": "analyses/two_sample_tests/parameters.schema.json",
+        "version": "0.0.0",
+        "content": {
+          "experimentalDesign": "WELCH_T_TEST",
+          "calc": {
+            "modelComparisonAIC": false,
+            "ciOfDifferenceBetweenMedians": false,
+            "ciOfMedianOfDifferences": false,
+            "usePrattMethod": false
+          },
+          "residuals": {
+            "diagnostics": {
+              "normalityTests": false
+            },
+            "graphs": {
+              "residualsPlot": false,
+              "homoscedasticityPlot": false,
+              "qqPlot": false,
+              "heatMapPlot": false
+            }
+          },
+          "report": {
+            "descriptiveStatistics": false
+          },
+          "graph": {
+            "differences": false,
+            "correlation": false,
+            "ranks": false,
+            "confidenceInterval": true
+          },
+          "options": {
+            "swapDirection": true,
+            "pValueTailType": "P_VALUE_TWO_TAILED",
+            "significanceLevel": 0.05
+          },
+          "output": {
+            "significantDigitCount": 4,
+            "pValueStyle": {
+              "type": "P_VALUE_STYLE_GP",
+              "decimalDigitCount": 6
+            }
+          }
+        }
+      },
+      "sidedness": "two-tailed"
+    },
+    {
+      "template": "student-t-sem.pzfx",
+      "sha256": "a722fee36e082328c81970f25a118aa1d120c61a96045a4361240263600bd27a",
+      "table_index": 1,
+      "graph_index": 1,
+      "prism_version": "10.3.1.509",
+      "analysis": "student-t",
+      "error_bars": "sem",
+      "experimental_design": "UNPAIRED_T_TEST",
+      "pairing": "independent",
+      "label": "等方差独立样本双侧 t，Mean ± SEM",
+      "layout": "column",
+      "groups": 2,
+      "minimum_observations": 2,
+      "results_index": 1,
+      "native_parameters": {
+        "@class": "AnalysisParameters",
+        "$id": "analyses/two_sample_tests/parameters.schema.json",
+        "version": "0.0.0",
+        "content": {
+          "experimentalDesign": "UNPAIRED_T_TEST",
+          "calc": {
+            "modelComparisonAIC": false,
+            "ciOfDifferenceBetweenMedians": false,
+            "ciOfMedianOfDifferences": false,
+            "usePrattMethod": false
+          },
+          "residuals": {
+            "diagnostics": {
+              "normalityTests": false
+            },
+            "graphs": {
+              "residualsPlot": false,
+              "homoscedasticityPlot": false,
+              "qqPlot": false,
+              "heatMapPlot": false
+            }
+          },
+          "report": {
+            "descriptiveStatistics": false
+          },
+          "graph": {
+            "differences": false,
+            "correlation": false,
+            "ranks": false,
+            "confidenceInterval": true
+          },
+          "options": {
+            "swapDirection": true,
+            "pValueTailType": "P_VALUE_TWO_TAILED",
+            "significanceLevel": 0.05
+          },
+          "output": {
+            "significantDigitCount": 4,
+            "pValueStyle": {
+              "type": "P_VALUE_STYLE_GP",
+              "decimalDigitCount": 6
+            }
+          }
+        }
+      },
+      "sidedness": "two-tailed"
+    },
+    {
+      "template": "paired-t-sem.pzfx",
+      "sha256": "cba7a242654255089222bd5b50f95f5f9cb980e4b60225e29d47fa86e02fd02f",
+      "table_index": 1,
+      "graph_index": 1,
+      "prism_version": "10.3.1.509",
+      "analysis": "paired-t",
+      "error_bars": "sem",
+      "experimental_design": "PAIRED_T_TEST",
+      "pairing": "paired",
+      "label": "配对双侧 t，Mean ± SEM",
+      "layout": "column",
+      "groups": 2,
+      "minimum_observations": 2,
+      "results_index": 1,
+      "native_parameters": {
+        "@class": "AnalysisParameters",
+        "$id": "analyses/two_sample_tests/parameters.schema.json",
+        "version": "0.0.0",
+        "content": {
+          "experimentalDesign": "PAIRED_T_TEST",
+          "calc": {
+            "modelComparisonAIC": false,
+            "ciOfDifferenceBetweenMedians": false,
+            "ciOfMedianOfDifferences": false,
+            "usePrattMethod": false
+          },
+          "residuals": {
+            "diagnostics": {
+              "normalityTests": false
+            },
+            "graphs": {
+              "residualsPlot": false,
+              "homoscedasticityPlot": false,
+              "qqPlot": false,
+              "heatMapPlot": false
+            }
+          },
+          "report": {
+            "descriptiveStatistics": false
+          },
+          "graph": {
+            "differences": false,
+            "correlation": false,
+            "ranks": false,
+            "confidenceInterval": true
+          },
+          "options": {
+            "swapDirection": true,
+            "pValueTailType": "P_VALUE_TWO_TAILED",
+            "significanceLevel": 0.05
+          },
+          "output": {
+            "significantDigitCount": 4,
+            "pValueStyle": {
+              "type": "P_VALUE_STYLE_GP",
+              "decimalDigitCount": 6
+            }
+          }
+        }
+      },
+      "sidedness": "two-tailed"
+    },
+    {
+      "template": "mann-whitney-sem.pzfx",
+      "sha256": "a5f9c39ede101fcdd026fecb43e526a20de39e87b196a12b4b38a4add62ecd2b",
+      "table_index": 1,
+      "graph_index": 1,
+      "prism_version": "10.3.1.509",
+      "analysis": "mann-whitney",
+      "error_bars": "sem",
+      "experimental_design": "MANN_WHITNEY_TEST",
+      "pairing": "independent",
+      "label": "双侧 Mann–Whitney，Mean ± SEM",
+      "layout": "column",
+      "groups": 2,
+      "minimum_observations": 2,
+      "results_index": 1,
+      "native_parameters": {
+        "@class": "AnalysisParameters",
+        "$id": "analyses/two_sample_tests/parameters.schema.json",
+        "version": "0.0.0",
+        "content": {
+          "experimentalDesign": "MANN_WHITNEY_TEST",
+          "calc": {
+            "modelComparisonAIC": false,
+            "ciOfDifferenceBetweenMedians": false,
+            "ciOfMedianOfDifferences": false,
+            "usePrattMethod": false
+          },
+          "residuals": {
+            "diagnostics": {
+              "normalityTests": false
+            },
+            "graphs": {
+              "residualsPlot": false,
+              "homoscedasticityPlot": false,
+              "qqPlot": false,
+              "heatMapPlot": false
+            }
+          },
+          "report": {
+            "descriptiveStatistics": false
+          },
+          "graph": {
+            "differences": false,
+            "correlation": false,
+            "ranks": false,
+            "confidenceInterval": true
+          },
+          "options": {
+            "swapDirection": true,
+            "pValueTailType": "P_VALUE_TWO_TAILED",
+            "significanceLevel": 0.05
+          },
+          "output": {
+            "significantDigitCount": 4,
+            "pValueStyle": {
+              "type": "P_VALUE_STYLE_GP",
+              "decimalDigitCount": 6
+            }
+          }
+        }
+      },
+      "sidedness": "two-tailed"
+    },
+    {
+      "template": "wilcoxon-sem.pzfx",
+      "sha256": "fc1b207723300c03aa4d168697148529422d62ae7aafbc671570384a66093740",
+      "table_index": 1,
+      "graph_index": 1,
+      "prism_version": "10.3.1.509",
+      "analysis": "wilcoxon",
+      "error_bars": "sem",
+      "experimental_design": "WILCOXON_TEST",
+      "pairing": "paired",
+      "label": "双侧 Wilcoxon 配对符号秩检验，Mean ± SEM",
+      "layout": "column",
+      "groups": 2,
+      "minimum_observations": 2,
+      "results_index": 1,
+      "native_parameters": {
+        "@class": "AnalysisParameters",
+        "$id": "analyses/two_sample_tests/parameters.schema.json",
+        "version": "0.0.0",
+        "content": {
+          "experimentalDesign": "WILCOXON_TEST",
+          "calc": {
+            "modelComparisonAIC": false,
+            "ciOfDifferenceBetweenMedians": false,
+            "ciOfMedianOfDifferences": false,
+            "usePrattMethod": false
+          },
+          "residuals": {
+            "diagnostics": {
+              "normalityTests": false
+            },
+            "graphs": {
+              "residualsPlot": false,
+              "homoscedasticityPlot": false,
+              "qqPlot": false,
+              "heatMapPlot": false
+            }
+          },
+          "report": {
+            "descriptiveStatistics": false
+          },
+          "graph": {
+            "differences": false,
+            "correlation": false,
+            "ranks": false,
+            "confidenceInterval": true
+          },
+          "options": {
+            "swapDirection": true,
+            "pValueTailType": "P_VALUE_TWO_TAILED",
+            "significanceLevel": 0.05
+          },
+          "output": {
+            "significantDigitCount": 4,
+            "pValueStyle": {
+              "type": "P_VALUE_STYLE_GP",
+              "decimalDigitCount": 6
+            }
+          }
+        }
+      },
+      "sidedness": "two-tailed"
+    },
+    {
+      "template": "anova-tukey-sem.pzfx",
+      "sha256": "d327fcbf08afebeea2b70b8d37b9b2e346a25d72a36c41b47ffa3d3881837d3a",
+      "table_index": 1,
+      "graph_index": 1,
+      "prism_version": "10.3.1.509",
+      "analysis": "anova-tukey",
+      "error_bars": "sem",
+      "experimental_design": "ORDINARY_ANOVA",
+      "pairing": "independent",
+      "label": "三组单因素 ANOVA + Tukey 全部组间比较，Mean ± SEM",
+      "layout": "column",
+      "groups": 3,
+      "minimum_observations": 2,
+      "results_index": 1,
+      "native_parameters": {
+        "@class": "AnalysisParameters",
+        "$id": "analyses/one_way_anova/parameters.schema.json",
+        "version": "0.0.0",
+        "content": {
+          "experimentalDesign": "ORDINARY_ANOVA",
+          "calc": {
+            "modelComparisonAIC": false
+          },
+          "repeatedMeasures": {
+            "method": "OPTIONAL",
+            "assumeSphericity": false,
+            "removeNonPositiveRandomEffects": true,
+            "useInitialValuesFromGLM": true
+          },
+          "postTests": {
+            "type": "PAIRWISE_TESTS",
+            "pairwiseTests": {
+              "pairwiseDesign": {
+                "type": "ALL_VS_ALL",
+                "controlID": {
+                  "col": {
+                    "idx": 0,
+                    "title": "Control",
+                    "uid": "FA032234-1EA4-4E45-989E-DBFD0BB2BF95"
+                  }
+                },
+                "selectedPairIDList": []
+              },
+              "multipleComparisons": {
+                "type": "STATISTICAL",
+                "statistical": {
+                  "test": "TUKEY",
+                  "report": {
+                    "adjustedPValues": true
+                  },
+                  "options": {
+                    "significanceLevel": 0.05
+                  }
+                },
+                "fdr": {
+                  "test": "BENJAMINI_KRIEGER_YEKUTIELI",
+                  "options": {
+                    "discoveryLevel": 0.05
+                  }
+                },
+                "noCorrection": {
+                  "options": {
+                    "significanceLevel": 0.05
+                  }
+                }
+              },
+              "graph": {
+                "differences": false,
+                "confidenceIntervals": false
+              },
+              "options": {
+                "swapDirection": false
+              }
+            }
+          },
+          "residuals": {
+            "diagnostics": {
+              "normalityTests": false,
+              "heteroscedasticityTests": true
+            },
+            "graphs": {
+              "residualsPlot": false,
+              "homoscedasticityPlot": false,
+              "qqPlot": false,
+              "heatMapPlot": false
+            }
+          },
+          "report": {
+            "descriptiveStatistics": false,
+            "goodnessOfFit": false
+          },
+          "graph": {
+            "ranks": false
+          },
+          "output": {
+            "significantDigitCount": 4,
+            "pValueStyle": {
+              "type": "P_VALUE_STYLE_GP",
+              "decimalDigitCount": 6
+            }
+          }
+        }
+      },
+      "post_test": "TUKEY",
+      "comparison_design": "ALL_VS_ALL"
+    }
+  ]
+}

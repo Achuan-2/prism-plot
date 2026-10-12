@@ -16,6 +16,8 @@ Column 表每个 YColumn 有一个 Subcolumn；XY 表同时有数值 XColumn。�
 
 ## 脚本机制
 
+便捷入口 `--analysis welch-t [--error-bars sem|sd]` 由 Python 从 `assets/analysis-profiles.json` 选择已验收模板，默认 SEM，自动绑定表与图序号并检查组数、样本数、模板校验值及原生双侧检验参数。`profiles` 列出可用组合。`.pzc` 本身仍不选择统计方法。官方 [Overview of Prism scripts](https://www.graphpad.com/guides/prism/latest/user-guide/overview.htm) 明确说明分析细节保存在项目文件中；[脚本命令列表](https://www.graphpad.com/support/faq/list-of-all-script-commands-for-graphpad-prism/) 也没有任意设置检验或误差线的命令。
+
 处理器以无 BOM 的 UTF-8 和 CRLF 写出 `.pzc`。Prism 10.3.1 会把 UTF-8 BOM 当作第一条命令的字符，导致 `Unknown Command`。命令行使用 `prism.exe @"full-path.pzc"`（Python 的参数列表由 Windows 自动引用）。模板转换和绘图导出分别使用唯一的完成文件；在读取输出前同时检查完成标记与预期文件。不能只等待 exe 进程退出：启动器可能把脚本转交给已有实例。
 
 核心脚本示例：

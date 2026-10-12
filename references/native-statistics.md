@@ -6,7 +6,7 @@
 
 匹配项目内已有原生分析及关联显著性标注时，直接用处理器填入新数据，执行 `Open` → `RecalcAll` → `GoTo R N` → `ExportTable` → `GoTo G N` → 原生图形导出 → `Save`。无需界面操作。`--results-index` 与 `--graph-index` 分别选择结果表和图形，不保证二者序号相同；多表项目还需核对 `--table-index`。
 
-检验设计由模板确定，脚本不改变配对关系、Welch/等方差选项或单双侧。更换检验类型需要对应模板，不能沿用不匹配的设置。图形汇总默认 Mean ± SEM，用户明确指定其他方式时遵从；沿用项目前必须确认图形实际为 Mean with SEM。此前工作区示例的 Mean with SD 模板不符合新的默认值，不能直接当作 SEM 模板或只改图注；应在 Prism 中配置并另存匹配模板，保留已有结果文件。用更换数据后原生结果表和图内星号一起更新作为重算证据，避免仅导出旧结果。
+检验设计由项目配置确定，`.pzc` 不改变配对、等方差或单双侧。常见方法可通过 `--analysis` 选择已验证的匹配模板；Prism 10 的 JSON 参数维护路径和完整目录见 [template-library.md](template-library.md)。图形默认 Mean ± SEM，不能沿用 SD 项目只改图注。用替换数据后的原生结果表和图内星号一起更新作为重算证据。两样本 Results 可能记住 Estimation Plot 子页，导出检验时显式 `GoTo R 1 V1`；普通 ANOVA 总体结果 V1、多重比较 V2。
 
 ## 首次创建两组原始值模板
 
