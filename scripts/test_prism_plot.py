@@ -1,11 +1,15 @@
 """Data/automation checks; these do not assert Prism rendering succeeds."""
 import importlib.util
+from contextlib import redirect_stdout
+import io
 import json
 from pathlib import Path
 import subprocess
+import re
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import xml.etree.ElementTree as ET
 import zipfile
 
@@ -121,22 +125,90 @@ class PrismDataTests(unittest.TestCase):
         self.assertIn('Save "' + manifest["verification_project"] + '"', commands)
         self.assertIn('"响应 50%%"', Path(manifest["script"]).read_text(encoding="utf-8-sig"))
         self.assertTrue(Path(manifest["script"]).read_bytes().startswith(b"CreateLog\r\n"))
+        run = Path(manifest["run_directory"])
+        work = run / "_work"
+        self.assertEqual(Path(manifest["work_directory"]), work)
+        self.assertEqual(Path(manifest["prepared_project"]).parent, work)
+        self.assertEqual(Path(manifest["verification_project"]).parent, work)
+        self.assertEqual(Path(manifest["script"]).parent, work)
+        self.assertEqual(Path(manifest["project"]), run / "data.prism")
+        self.assertTrue(all(Path(path).parent == run for path in manifest["exports"]))
+        self.assertEqual(list(run.parent.iterdir()), [run])
 
-    def test_published_project_preserves_full_file_and_existing_output(self):
-        original = self.root / "project.pzfx"
-        headers, rows = ["Control", "Treatment"], [["1", "2"], ["3", None]]
-        prism.prepare(self.template(), original, headers, rows, "column", None)
-        destination = self.root / "simulated-t-test.pzfx"
-        digest = prism.publish_project(original, destination)
-        self.assertEqual(original.read_bytes(), destination.read_bytes())
-        self.assertEqual(len(digest), 64)
-        prism.verify_project(destination, headers, rows, "column", 1)
-        self.assertEqual(prism.parse_template(destination)[0].getroot().findtext(prism.tag("Template")), "opaque-test-payload")
-        original.write_bytes(b"different content")
-        preserved = destination.read_bytes()
-        with self.assertRaises(FileExistsError):
-            prism.publish_project(original, destination)
-        self.assertEqual(destination.read_bytes(), preserved)
+    def simulated_execution(self, executable, script, marker, timeout):
+        """Exercise artifact routing without claiming a real Prism render."""
+        prepared = None
+        for line in script.read_text(encoding="utf-8").splitlines():
+            match = re.match(r'^(Open|Save|ExportPDF|ExportPNG|ExportTable) "([^"]+)"', line)
+            if not match:
+                continue
+            command, filename = match.groups()
+            path = Path(filename)
+            if command == "Open":
+                prepared = path
+            elif command == "Save" and path.suffix == ".pzfx":
+                path.write_bytes(prepared.read_bytes())
+            elif command == "Save":
+                with zipfile.ZipFile(path, "w") as archive:
+                    archive.writestr("document.json", json.dumps({"sheets": {
+                        "data": ["data-uid"], "graphs": ["graph-uid"], "analyses": []}}))
+                    archive.writestr("data/sheets/data-uid/sheet.json", "{}")
+                    archive.writestr("graphs/graph-uid/sheet.json", "{}")
+                    archive.writestr("graphs/graph-uid/data.bin", b"test-native-payload")
+            elif command == "ExportPDF":
+                path.write_bytes(b"%PDF-1.7\n")
+            elif command == "ExportPNG":
+                path.write_bytes(b"\x89PNG\r\n\x1a\n")
+            elif command == "ExportTable":
+                path.write_text("Test result\t1\n", encoding="utf-8")
+        marker.write_text("done", encoding="utf-8")
+        return {"pid": 0, "seconds": 0}
+
+    def test_success_keeps_one_project_and_preserves_prior_run(self):
+        source = self.root / "data.csv"
+        source.write_text("A,B\n1,2\n3,4\n", encoding="utf-8")
+        template = self.template()
+        output = self.root / "output"
+        for fmt in ("prism", "pzfx"):
+            with self.subTest(project_format=fmt):
+                args = ["prism_plot.py", "plot", "--input", str(source), "--layout", "column",
+                        "--template", str(template), "--output", str(output),
+                        "--project-format", fmt, "--results-index", "1"]
+                previous = {path: path.read_bytes() for path in output.rglob("*") if path.is_file()} if output.exists() else {}
+                captured = io.StringIO()
+                with patch.object(sys, "argv", args), patch.object(prism, "find_prism", return_value=self.root / "prism.exe"), \
+                        patch.object(prism, "execute", side_effect=self.simulated_execution), redirect_stdout(captured):
+                    self.assertEqual(prism.main(), 0)
+                manifest = json.loads(captured.getvalue())
+                run = Path(manifest["run_directory"])
+                project = run / f"data.{fmt}"
+                self.assertEqual(Path(manifest["project"]), project)
+                self.assertEqual(Path(manifest["deliverable_project"]), project)
+                self.assertEqual(list(run.rglob(f"*.{fmt}")), [project] if fmt == "prism" else
+                                 [project, run / "_work" / "prepared.pzfx"])
+                self.assertEqual({path.name for path in run.iterdir()},
+                                 {f"data.{fmt}", "data.pdf", "data.png", "statistics.txt", "manifest.json", "_work"})
+                self.assertTrue(all(path.is_dir() for path in output.iterdir()))
+                self.assertEqual(len(manifest["deliverable_project_sha256"]), 64)
+                for path, content in previous.items():
+                    self.assertEqual(path.read_bytes(), content)
+
+    def test_failed_execution_preserves_diagnostics_without_success_project(self):
+        source = self.root / "data.csv"
+        source.write_text("A\n1\n", encoding="utf-8")
+        args = ["prism_plot.py", "plot", "--input", str(source), "--layout", "column",
+                "--template", str(self.template()), "--output", str(self.root / "output")]
+        with patch.object(sys, "argv", args), patch.object(prism, "find_prism", return_value=self.root / "prism.exe"), \
+                patch.object(prism, "execute", side_effect=RuntimeError("test execution failed")), \
+                redirect_stdout(io.StringIO()), patch.object(sys, "stderr", io.StringIO()):
+            self.assertEqual(prism.main(), 1)
+        run = next((self.root / "output").iterdir())
+        manifest = json.loads((run / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["status"], "failed")
+        self.assertNotIn("deliverable_project", manifest)
+        self.assertTrue((run / "_work" / "plot.pzc").is_file())
+        self.assertTrue((run / "_work" / "prepared.pzfx").is_file())
+        self.assertFalse(any(run.rglob("*.prism")))
 
     def test_script_literal_safety_and_format_signature(self):
         self.assertEqual(prism.quoted("响应 %"), '"响应 %%"')

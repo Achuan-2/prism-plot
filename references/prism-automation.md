@@ -10,7 +10,7 @@ Column 表每个 YColumn 有一个 Subcolumn；XY 表同时有数值 XColumn。�
 
 ## 模板使用
 
-模板的每条曲线、每组的图形绑定、配色、点大小、字体、误差条方式和统计分析由 Prism 文件决定。修改 `.pzfx` 时保留所有其他节点，尤其 `<Template>` 中的不透明配置。处理器仅替换目标表中的数据值和标题，剩余 Y 列清空；模板可画的数据集上限不随输入扩展。
+模板的每条曲线、每组的图形绑定、配色、点大小、字体、误差条方式和统计分析由 Prism 文件决定。原始值的汇总默认 Mean ± SEM，用户指定其他方式时遵从；调用处理器前确认模板符合所需汇总方式，不能假设它会将已有 SD 自动切换为 SEM。修改 `.pzfx` 时保留所有其他节点，尤其 `<Template>` 中的不透明配置。处理器仅替换目标表中的数据值和标题，剩余 Y 列清空；模板可画的数据集上限不随输入扩展。
 
 本机内置模板是候选起点，不保证任意安装版本的表格数量和结构一致。运行 `inspect-template` 或将 `.pzt` 由 Prism 保存为 `.pzfx` 后检查；演示模板可能有固定范围、注释或多个图，需要实际预览。项目原有统计设置也会重算，不把继承的统计结果当成用户请求的科学结论。
 
@@ -22,24 +22,24 @@ Column 表每个 YColumn 有一个 Subcolumn；XY 表同时有数值 XColumn。�
 
 ```text
 CreateLog
-Open "D:\run\prepared.pzfx"
+Open "D:\run\_work\prepared.pzfx"
 RecalcAll
 GoTo G 1
 SetGraphTitle "实验结果"
 SetAxisTitle Y "响应值"
-ExportPDF "D:\run\figure.pdf" RGB
-ExportPNG "D:\run\figure.png" 300
-Save "D:\run\project.pzfx"
-Save "D:\run\project.prism"
+ExportPDF "D:\run\data.pdf" RGB
+ExportPNG "D:\run\data.png" 300
+Save "D:\run\_work\verification.pzfx"
+Save "D:\run\data.prism"
 Close
-OpenOutput "D:\run\finished.txt"
+OpenOutput "D:\run\_work\finished.txt"
 WText "done"
 CloseOutput
 ```
 
-需要结果表时，在选择图形前插入 `GoTo R <结果表序号>` 和 `ExportTable "D:\run\results.txt"`。`.txt` 为制表符文本，`.csv` 为逗号分隔文本。`RecalcAll` 重算项目已有分析，不能创建新的统计设置。处理器先更新完整模板的 XML 数据，再启动 Prism 执行这些命令；Python 不计算统计检验或绘制导出图。
+需要结果表时，在选择图形前插入 `GoTo R <结果表序号>` 和 `ExportTable "D:\run\statistics.txt"`。`.txt` 为制表符文本，`.csv` 为逗号分隔文本。`RecalcAll` 重算项目已有分析，不能创建新的统计设置。处理器先更新完整模板的 XML 数据，再启动 Prism 执行这些命令；Python 不计算统计检验或绘制导出图。
 
-Prism 10.3.1 已实测 `Save` 可生成真正的 `.prism` 文件，`Open` 也可读取该格式。先保存 `.pzfx` 便于核对 XML 数据，再保存 `.prism` 作为默认交付源项目；旧版用 `--project-format pzfx`。`.prism` 是含数据、原生分析与图形的 ZIP 容器，不能仅重命名 XML。
+Prism 10.3.1 已实测 `Save` 可生成真正的 `.prism` 文件，`Open` 也可读取该格式。先在 `_work` 保存用于核对 XML 数据的 `verification.pzfx`，再直接保存唯一的 `.prism` 交付源项目；旧版用 `--project-format pzfx`，直接保存并核对最终 `.pzfx`，不另存核对副本。`.prism` 是含数据、原生分析与图形的 ZIP 容器，不能仅重命名 XML。每次运行创建独立文件夹，图形、结果表、清单和源项目放在同一层；运行目录外不额外复制项目。
 
 百分号用于 Prism 脚本变量，标题和路径中的字面 `%` 需写成 `%%`；引号及换行被拒绝，避免破坏脚本。部分旧版本可能不能读取中文 UTF-8 脚本；根据真实错误改用其支持的编码或手动运行，勿直接宣称兼容。导出 SVG 应核对已安装 Prism 的支持情况。
 

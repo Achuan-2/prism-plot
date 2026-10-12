@@ -13,7 +13,6 @@ import json
 import math
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 import time
@@ -320,16 +319,6 @@ def verify_project(path: Path, headers, rows, layout, table_index):
             raise RuntimeError(f"输出项目的第 {index + 1} 列数据与输入不符")
 
 
-def publish_project(project: Path, destination: Path) -> str:
-    """Keep an exact native project beside the user-facing outputs without overwriting."""
-    with project.open("rb") as source, destination.open("xb") as target:
-        shutil.copyfileobj(source, target)
-    digest = hashlib.sha256(project.read_bytes()).hexdigest()
-    if hashlib.sha256(destination.read_bytes()).hexdigest() != digest:
-        raise RuntimeError(f"交付项目副本与 Prism 源项目不一致: {destination}")
-    return digest
-
-
 def validate_prism_project(path: Path):
     """Check that Prism saved a real modern project, rather than renamed XML."""
     if not path.is_file() or not zipfile.is_zipfile(path):
@@ -379,37 +368,40 @@ def plot(args):
     if args.prepare_only and template.suffix.lower() != ".pzfx":
         raise ValueError("非 .pzfx 模板需由 Prism 转换，--prepare-only 仅接受 .pzfx")
     output = Path(args.output).resolve() if args.output else source.parent / "prism-output"
-    run = output / (datetime.now().strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:8])
+    run = output / (source.stem + "-" + datetime.now().strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:8])
     run.mkdir(parents=True, exist_ok=False)
+    work = run / "_work"
+    work.mkdir()
     manifest_path = run / "manifest.json"
     manifest = {"status": "preparing", "source": str(source), "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
                 "template": str(template), "prism_exe": str(prism) if prism else None,
                 "layout": args.layout, "headers": headers, "graph_index": args.graph_index,
                 "project_format": args.project_format, "color_scheme": args.color_scheme,
-                "run_directory": str(run), "warnings": ["继承模板的图形样式、统计和坐标设置；交付前必须检查预览"]}
+                "run_directory": str(run), "work_directory": str(work),
+                "warnings": ["继承模板的图形样式、统计和坐标设置；交付前必须检查预览"]}
     save_manifest(manifest_path, manifest)
     try:
-        with (run / "normalized-data.csv").open("w", encoding="utf-8-sig", newline="") as stream:
+        with (work / "normalized-data.csv").open("w", encoding="utf-8-sig", newline="") as stream:
             writer = csv.writer(stream)
             writer.writerow(headers)
             writer.writerows(rows)
         if template.suffix.lower() != ".pzfx":
-            converted = run / "template.pzfx"
-            marker = run / "template-finished.txt"
-            script = run / "convert-template.pzc"
+            converted = work / "template.pzfx"
+            marker = work / "template-finished.txt"
+            script = work / "convert-template.pzc"
             write_script(script, ["CreateLog", f"Open {quoted(template)}", f"Save {quoted(converted)}", "Close", *completion_lines(marker)])
             execute(prism, script, marker, args.timeout)
             template = converted
-        prepared = run / "prepared.pzfx"
+        prepared = work / "prepared.pzfx"
         manifest["data"] = prepare(template, prepared, headers, rows, args.layout, args.table_index)
-        verification_project = run / "project.pzfx"
-        project = run / f"project.{args.project_format}"
-        script = run / "plot.pzc"
-        marker = run / "finished.txt"
+        project = run / f"{source.stem}.{args.project_format}"
+        verification_project = work / "verification.pzfx" if args.project_format == "prism" else project
+        script = work / "plot.pzc"
+        marker = work / "finished.txt"
         lines = ["CreateLog", f"Open {quoted(prepared)}", "RecalcAll"]
         results_export = None
         if args.results_index is not None:
-            results_export = run / "results.txt"
+            results_export = run / "statistics.txt"
             lines += [f"GoTo R {args.results_index}", f"ExportTable {quoted(results_export)}"]
         lines.append(f"GoTo G {args.graph_index}")
         if args.color_scheme is not None:
@@ -428,7 +420,7 @@ def plot(args):
         exports = []
         commands = {"pdf": "ExportPDF", "png": "ExportPNG", "tif": "ExportTIF", "eps": "ExportEPS", "emf": "ExportEMF", "svg": "ExportSVG"}
         for fmt in dict.fromkeys(args.formats):
-            path = run / f"figure.{fmt}"
+            path = run / f"{source.stem}.{fmt}"
             options = f" {args.dpi} RGBhi LZW" if fmt == "tif" else f" {args.dpi}" if fmt == "png" else " RGB" if fmt in ("pdf", "eps") else ""
             lines.append(f"{commands[fmt]} {quoted(path)}{options}")
             exports.append((path, fmt))
@@ -455,13 +447,8 @@ def plot(args):
             verify_project(verification_project, headers, rows, args.layout, manifest["data"]["table_index"])
             if args.project_format == "prism":
                 validate_prism_project(project)
-            deliverable = output / f"{source.stem}-{run.name}.{args.project_format}"
-            digest = publish_project(project, deliverable)
-            if args.project_format == "prism":
-                validate_prism_project(deliverable)
-            else:
-                verify_project(deliverable, headers, rows, args.layout, manifest["data"]["table_index"])
-            manifest.update({"deliverable_project": str(deliverable), "deliverable_project_sha256": digest})
+            manifest.update({"deliverable_project": str(project),
+                             "deliverable_project_sha256": hashlib.sha256(project.read_bytes()).hexdigest()})
             manifest["status"] = "exported_preview_pending"
         save_manifest(manifest_path, manifest)
         print(json.dumps(manifest, ensure_ascii=False, indent=2))
@@ -488,7 +475,7 @@ def main():
     plotting.add_argument("--output")
     plotting.add_argument("--table-index", type=int)
     plotting.add_argument("--graph-index", type=int, default=1)
-    plotting.add_argument("--results-index", type=int, help="导出指定 Prism 原生 Results 表为 results.txt；序号从 1 开始")
+    plotting.add_argument("--results-index", type=int, help="导出指定 Prism 原生 Results 表为 statistics.txt；序号从 1 开始")
     plotting.add_argument("--project-format", choices=("prism", "pzfx"), default="prism",
                           help="交付源项目格式；prism 需要 Prism 10+，旧版可选 pzfx")
     plotting.add_argument("--color-scheme", help="Prism 已有配色方案名称，例如 Colorblind Safe、Floral 或 Waves")
