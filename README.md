@@ -66,15 +66,21 @@ flowchart TD
 
 ## 🚀 Quick Start
 
-### 1. Prerequisites
+### 1. Ask Your Agent to Install the Skill
+
+```text
+Install the prism-plot skill from https://github.com/Achuan-2/prism-plot
+```
+
+### 2. Prerequisites
 
 - **OS**: Windows 10 / 11
 - **GraphPad Prism**: Installed locally (Prism 10+ recommended, verified on 10.3.1; backward compatible with Prism 9 via `.pzfx`).
 - **Python Runtime**: Python 3.10+ managed via [uv](https://github.com/astral-sh/uv).
 
-### 2. Environment Doctor
+### 3. Environment Doctor
 
-Verify your local Prism installation and executable path:
+Run this command from the installed skill directory to verify your local Prism installation and executable path:
 
 ```powershell
 uv run python scripts/prism_plot.py doctor

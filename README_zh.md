@@ -64,15 +64,21 @@ flowchart TD
 
 ## 🚀 快速上手 (Quick Start)
 
-### 1. 前置依赖 (Prerequisites)
+### 1. 让 Agent 安装 Skill
+
+```text
+从 https://github.com/Achuan-2/prism-plot 安装 prism-plot skill
+```
+
+### 2. 前置依赖 (Prerequisites)
 
 - **操作系统**：Windows 10 / 11
 - **软件要求**：本地已安装 **GraphPad Prism**（推荐 Prism 10+，经 Prism 10.3.1 实测；旧版本可降级使用 `.pzfx` 格式）
 - **开发环境**：Python 3.10+，推荐使用 [uv](https://github.com/astral-sh/uv) 运行；读取 `.xlsx` 需安装 `openpyxl`
 
-### 2. 环境体检 (Doctor Check)
+### 3. 环境体检 (Doctor Check)
 
-执行以下命令检查本地 Prism 安装状态与路径：
+进入安装后的 skill 目录，执行以下命令检查本地 Prism 安装状态与路径：
 
 ```powershell
 uv run python scripts/prism_plot.py doctor
@@ -227,4 +233,3 @@ prism-plot/
 
 本项目遵循 MIT 开源许可。
 GraphPad Prism 是 Dotmatics 的注册商标。本项目为非官方自动化辅助工具，运行需用户本地自行取得合法的 GraphPad Prism 授权。
-
