@@ -66,7 +66,15 @@ flowchart TD
 
 ## 🚀 Quick Start
 
-### 1. Ask Your Agent to Install the Skill
+### 1. Install the Skill
+
+Install [Node.js](https://nodejs.org/) (which includes `npx`), then run:
+
+```powershell
+npx skills add Achuan-2/prism-plot
+```
+
+Alternatively, ask your agent to install it:
 
 ```text
 Install the prism-plot skill from https://github.com/Achuan-2/prism-plot
